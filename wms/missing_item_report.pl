@@ -54,7 +54,11 @@ my $DEBUG = $g_opt{d};
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
 
-my $g_emails      = $g_cfg->wms_missing_item->{tech_emails};  #TODO
+#TODO KS Uncomment next line, delete the two lines after that.
+#my $g_emails      = $g_cfg->wms_missing_item->{tech_emails};  #TODO 
+my $g_emails ;
+$g_emails->{kav} ='kaveh.sari@usmc-mccs.org'; 
+
 my $g_cust_emails = $g_cfg->wms_missing_item->{customer_emails};  #TODO
 my $g_dbname      = $g_cfg->wms_missing_item->{dbname};  #TODO
    $g_dbname = 'rms_p';
@@ -73,7 +77,11 @@ $progname =~ s/\.\w+$//;
 Readonly my $g_logfile => '/usr/local/mccs/log/wms/' . $progname . '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
-my $g_yyyymmdd  = `date +"%Y%m%d"`;
+
+#TODO KS Remove Date -d yesterday, and uncomment the line after that 
+my $g_yyyymmdd  = `date -d "yesterday"  +"%Y%m%d"`;
+#my $g_yyyymmdd  = `date +"%Y%m%d"`;
+
 chomp($g_yyyymmdd);
 my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
 my $g_host = `hostname`; 
