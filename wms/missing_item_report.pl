@@ -144,12 +144,14 @@ p, body {
 }
 </style>
 ECSS
-    foreach my $name (sort keys %{$g_cust_emails}) {
-
-        $g_log->info("Send email to $name " . $g_cust_emails->{$name} );
+  #TODO Modifiying Loop, revert back 
+  #  foreach my $name (sort keys %{$g_cust_emails}) {
+        my $name = 'kav';
+        $g_log->info("Send email to $name " . $g_emails->{kav} );
 
         open( MAIL, "|/usr/sbin/sendmail -t" );
-        print MAIL "To: " . $g_cust_emails->{$name} . " \n";
+   #     print MAIL "To: " . $g_cust_emails->{$name} . " \n";
+        print MAIL "To: " . $g_emails->{kav} . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
         print MAIL "Subject: $msg_sub \n";
         print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
@@ -160,7 +162,7 @@ ECSS
         print MAIL "\n";
         print MAIL "\n";
         close(MAIL);
-    }
+   # }
     $g_log->info("$msg_bod1");
 
 }
@@ -348,7 +350,7 @@ sub get_ba_rec {
         #print "$r->{style_id}  item_id = $concat   barcode = $r->{bar_code_id}\n"; 
     }
 
-    $g_log->info("Getting BA record from WMS-Archive");
+    $g_log->info(" BGettingA record from WMS-Archive");
     $g_ba_arc_sth->execute();
 
     
