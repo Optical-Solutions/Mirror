@@ -54,11 +54,7 @@ my $DEBUG = $g_opt{d};
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
 
-#TODO KS Uncomment next line, delete the two lines after that.
-#my $g_emails      = $g_cfg->wms_missing_item->{tech_emails};  #TODO 
-my $g_emails ;
-$g_emails->{kav} ='kaveh.sari@usmc-mccs.org'; 
-
+my $g_emails      = $g_cfg->wms_missing_item->{tech_emails};  #TODO 
 my $g_cust_emails = $g_cfg->wms_missing_item->{customer_emails};  #TODO
 my $g_dbname      = $g_cfg->wms_missing_item->{dbname};  #TODO
    $g_dbname = 'rms_p';
@@ -78,9 +74,7 @@ Readonly my $g_logfile => '/usr/local/mccs/log/wms/' . $progname . '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
 
-#TODO KS Remove Date -d yesterday, and uncomment the line after that 
-my $g_yyyymmdd  = `date -d "yesterday"  +"%Y%m%d"`;
-#my $g_yyyymmdd  = `date +"%Y%m%d"`;
+my $g_yyyymmdd  = `date +"%Y%m%d"`;
 
 chomp($g_yyyymmdd);
 my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
@@ -144,14 +138,11 @@ p, body {
 }
 </style>
 ECSS
-  #TODO Modifiying Loop, revert back 
-  #  foreach my $name (sort keys %{$g_cust_emails}) {
-        my $name = 'kav';
-        $g_log->info("Send email to $name " . $g_emails->{kav} );
 
+    foreach my $name (sort keys %{$g_cust_emails}) {
+        $g_log->info("Send email to $name " . $g_cust_emails->{$name} );
         open( MAIL, "|/usr/sbin/sendmail -t" );
-   #     print MAIL "To: " . $g_cust_emails->{$name} . " \n";
-        print MAIL "To: " . $g_emails->{kav} . " \n";
+        print MAIL "To: " . $g_cust_emails->{$name} . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
         print MAIL "Subject: $msg_sub \n";
         print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
@@ -162,7 +153,7 @@ ECSS
         print MAIL "\n";
         print MAIL "\n";
         close(MAIL);
-   # }
+    }
     $g_log->info("$msg_bod1");
 
 }
