@@ -11,6 +11,12 @@
 #      Archive Sent Files
 #      Remove Old Logs
 #-----------------------------------------------------------------
+# Ported by:  Kaveh Sari
+# Date: Thu May  9 14:37:29 EDT 2024
+# Desc:
+# Added a no send option to this code to allow skipping of sftp process.
+# Created archive directory
+#-----------------------------------------------------------------
 use strict;
 use IBIS::DBI;
 use DateTime;
@@ -45,7 +51,10 @@ my $g_verbose = 0;
 my $g_dbh;
 
 my $g_cfg = new MCCS::Config;
-my $g_emails = $g_cfg->acv_DATA->{emails};
+#TODO, uncomment next line, delete the two lines following that
+#my $g_emails = $g_cfg->acv_DATA->{emails};
+my $g_emails;
+$g_emails->{kav} = 'kaveh.sari@usmc-mccs.org';
 
 # Extract file name for Departments List flat file from acv configuration
 my $g_DptList = $g_cfg->acv_DATA->{DEPARTMENTS_FILENAME};
@@ -84,6 +93,8 @@ if ($@) { fatal_error('Unable to connect to RMS database') }
 
 $g_log->info("All pre-processing steps have completed\n");
 
+my $suppress_send = 0;
+my $options = ( GetOptions('nosend' =>  \$suppress_send));
 #############################   MAIN LINE   #########################################
 
 $g_log->info("Prepare and execute sql to generate the Department List recordset");
@@ -98,8 +109,10 @@ my $Item_sth = crtItemLibRecordSet();
 $g_log->info("populate FlatFiles");
 populateFlatFiles( $Dept_sth, $Cat_sth, $Item_sth );
 
-$g_log->info("SFTP FlatFiles");
-ftpsslFlatFiles();
+if (!$suppress_send) {
+	$g_log->info("SFTP FlatFiles");
+	ftpsslFlatFiles();
+}
 
 $g_log->info("Archive Sent Files");
 archiveSentFiles();
