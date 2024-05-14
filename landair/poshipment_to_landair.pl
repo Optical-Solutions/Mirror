@@ -57,7 +57,7 @@ my $opt_result = GetOptions (
     "help"     => \$help);  # flag
 
 if(!$opt_result){
-    print "Some options are wrong. Need resubmit the job $0\n";
+    die "Some options are wrong. Need resubmit the job $0 ";
 }
 
 

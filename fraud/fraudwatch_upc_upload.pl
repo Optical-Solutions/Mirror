@@ -26,7 +26,9 @@ use IBIS::Mail;
 use English qw(-no_match_vars);
 use version; our $VERSION = qv('1.0.0');
 
-Readonly::Scalar my $MAIL_TO => 'rdistaff@usmc-mccs.org';
+#TODO uncomment next line and delete line after.
+#Readonly::Scalar my $MAIL_TO => 'rdistaff@usmc-mccs.org';
+Readonly::Scalar my $MAIL_TO => 'kaveh.sari@usmc-mccs.org';
 
 Readonly::Scalar my $MAIL_FROM => 'IBIS FraudWatch Processor';
 
@@ -39,6 +41,7 @@ Readonly my $LOGFILE  => '/usr/local/mccs/log/fraudwatch/fraudwatch_upload.log';
 Readonly my $DATEFILE => '/usr/local/mccs/data/fraudwatch/upload/last_upload.dat';
 
 my $DEBUG = 0;
+my $NOSEND = 0; #Added NOSEND option used to suppress SCP.
 my %options;
 my $dbh      = undef;
 my $msg      = undef;
@@ -46,12 +49,17 @@ my $sth      = undef;
 my $upc_file = undef;
 my $lu_file  = undef;
 
-getopts( 'da', \%options );
+
+#Added No SCP option.
+getopts( 'dan', \%options );
 
 if ( $options{d} ) {
     $DEBUG = 1;
 }
-
+#Added No SCP option.
+if ( $options{n}) {
+    $NOSEND = 1;
+}
 my $log = new IBIS::Log::File( { file => $LOGFILE, append => 1 } );
 my $last_upload = '197001010';    #The epoch
 
@@ -60,7 +68,7 @@ if ($DEBUG) {
     $log->debug("Using $last_upload as the last upload date.");
 }
 
-if ( !$options{'a'} ) {    #options a measn get all barcodes
+if ( !$options{'a'} ) {    #options a means get all barcodes
     if ( open my $fh, '<', $DATEFILE ) {
         my $line = <$fh>;
         ($last_upload) = $line =~ /(\d{9})/msx;
@@ -188,36 +196,40 @@ if ($DEBUG) {
 
 MCCS::Utils::zipit( archive => "$skufile.zip", files => [$skufile] );
 
-my $sshobj = IBIS::SSH2CONNECT->new( IBISlog_object => $log );
-my $scp = $sshobj->connect( user => $FW_USER, host => $FW_HOST );
+#Added No Send option for scp.
+if ( $NOSEND) {
 
-if ( $@ || !$scp ) {
-    my $mess = $scp ? join( ' ', $scp->error ) : $!;
-    send_notify("SCP login failed:: $@. Login error:$mess.");
-} else {
-    $log->info("Login OK to $FW_HOST");
-    $log->info("Starting file transfer to $FW_HOST");
+    my $sshobj = IBIS::SSH2CONNECT->new( IBISlog_object => $log );
+    my $scp = $sshobj->connect( user => $FW_USER, host => $FW_HOST );
+
+    if ( $@ || !$scp ) {
+        my $mess = $scp ? join( ' ', $scp->error ) : $!;
+        send_notify("SCP login failed:: $@. Login error:$mess.");
+    } else {
+        $log->info("Login OK to $FW_HOST");
+        $log->info("Starting file transfer to $FW_HOST");
+    }
+
+    my $out_file = basename("$skufile.zip");
+
+    $log->info("SCP $skufile.zip to $FW_HOST :: $out_file");
+
+    if ( !$scp->scp_put( "$skufile.zip", $out_file ) ) {
+        send_notify( "SKU file copy failed: " . join( ' ', $scp->error ) );
+    } else {
+        $log->info("SCP OK to $FW_HOST");
+    }
+
+    my $donefile = join '/', $WORKDIR, "$today.donsku";
+
+    MCCS::Utils::touch($donefile);
+
+    if ( !$scp->scp_put( $donefile, basename($donefile) ) ) {
+        send_notify( "File copy failed: $@. SCP error: " . join( ' ', $scp->error ) );
+    }
+
+    $log->info('Files transfered.');
 }
-my $out_file = basename("$skufile.zip");
-
-$log->info("SCP $skufile.zip to $FW_HOST :: $out_file");
-
-if ( !$scp->scp_put( "$skufile.zip", $out_file ) ) {
-    send_notify( "SKU file copy failed: " . join( ' ', $scp->error ) );
-} else {
-    $log->info("SCP OK to $FW_HOST");
-}
-
-my $donefile = join '/', $WORKDIR, "$today.donsku";
-
-MCCS::Utils::touch($donefile);
-
-if ( !$scp->scp_put( $donefile, basename($donefile) ) ) {
-    send_notify( "File copy failed: $@. SCP error: " . join( ' ', $scp->error ) );
-}
-
-$log->info('Files transfered.');
-
 if ( !$options{'a'} ) {    #if doing bulk loading... don't update last run file
 
     if ($DEBUG) {
