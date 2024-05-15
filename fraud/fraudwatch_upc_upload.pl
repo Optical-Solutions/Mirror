@@ -8,6 +8,8 @@
 ##
 ##            The program must run a rdiusr.
 ## --------------------------------------------------------------------------  
+##Ported by Kaveh Sari 5/15/2024
+#Chnged the program to accept a -n option which will prevent SCP.
 
 use strict;
 use warnings;
