@@ -63,10 +63,7 @@ if ( $options{n}) {
 my $log = new IBIS::Log::File( { file => $LOGFILE, append => 1 } );
 my $last_upload = '197001010';    #The epoch
 
-if ($DEBUG) {
-    $log->debug('Fetching UPC data from Essentus system.');
-    $log->debug("Using $last_upload as the last upload date.");
-}
+
 
 if ( !$options{'a'} ) {    #options a means get all barcodes
     if ( open my $fh, '<', $DATEFILE ) {
@@ -77,7 +74,10 @@ if ( !$options{'a'} ) {    #options a means get all barcodes
         send_notify("Could not open date checkpoint file: $!");
     }
 }
-
+if ($DEBUG) {
+    $log->debug('Fetching UPC data from Essentus system.');
+    $log->debug("Using $last_upload as the last upload date.");
+}
 $dbh = IBIS::DBI->connect( dbname => 'rms_p' );
 
 my $sql = q{ 
@@ -197,7 +197,7 @@ if ($DEBUG) {
 MCCS::Utils::zipit( archive => "$skufile.zip", files => [$skufile] );
 
 #Added No Send option for scp.
-if ( $NOSEND) {
+if ( !$NOSEND) {
 
     my $sshobj = IBIS::SSH2CONNECT->new( IBISlog_object => $log );
     my $scp = $sshobj->connect( user => $FW_USER, host => $FW_HOST );
