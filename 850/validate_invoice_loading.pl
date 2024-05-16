@@ -12,11 +12,13 @@
 ## 3, send emails if not all files are found loaded. 
 #
 #-------------------------------------------------------------------------
-
+# Ported by:  Kaveh Sari
+# Date:  Thu May 16 15:54:05 EDT 2024
+# DESC: Removed the call to Sendmail and used IBIS::mail instead.
 use strict;
 use Data::Dumper;
 use IBIS::DBI;
-use IBIS::Email;
+use IBIS::Mail;
 use IBIS::Log::File;
 
 my $log_filename      ="/usr/local/mccs/log/850/VALIDATe_invoice_loading.log";
@@ -69,20 +71,27 @@ foreach my $file(@downloaded){
 my $size = @missed;
 
 if ($size >0){
-    my ($from, $to, $subject, $content);
-    $from ='rdistaff@usmc-mccs.org';
-    #TODO Uncomment next line, and delete line after that
-    #$to    ='rdistaff@usmc-mccs.org';
-    $to    ='kaveh.sari@usmc-mccs.org';
-    $subject ="Warning: Some invoice files did not load!";
-    $content = Dumper(\@missed);
-    $log->info($subject . $content);
-    sendmail($from,$to,$subject, $content);  
+    notify();  
 
 }else{
     $log->info("All invoice files fetched in the last 24 hours are validated.");
 }
+sub notify {
 
+
+    my $m = IBIS::Mail->new(
+        #TODO, remove line with kaveh sari, and uncomment next line.
+        #to      => [ 'rdistaff@usmc-mccs.org' ],
+        to      =>  [ 'kaveh.sari@usmc-mccs.org' ],
+        from    => 'rdistaff@usmc-mccs.org',
+        subject => "Warning: Some invoice files did not load!",
+        body    => Dumper(\@missed)
+    );
+
+    $m->send( );
+
+
+}
 # log end time
 $log->info("Program Ended");
 
