@@ -71,6 +71,7 @@ foreach my $file(@downloaded){
 my $size = @missed;
 
 if ($size >0){
+    $log->info("Warning: Some invoice files did not load! " . Dumper(\@missed));
     notify();  
 
 }else{
