@@ -8,6 +8,10 @@
 # usually twice per day. If not empty, you need to check the 850 log, and truncate the table. 
 #
 #---------------------------------------------------
+#Ported by:  Kaveh Sari
+# Date:  Thursday, May 16th, 2024
+# DESC / Update:
+# 
 use strict;
 use IBIS::DBI;
 use Data::Dumper;

@@ -1,6 +1,6 @@
 #!/usr/local/mccs/perl/bin/perl
 #--------------------------------------------------------------------------
-#Ported by : Hung Nguyen
+#Ported by : Hf
 #Date      : 12/07/2023
 #
 #Brief Desc: Get new .cvs files from SPS-Commerce remote directory to local 

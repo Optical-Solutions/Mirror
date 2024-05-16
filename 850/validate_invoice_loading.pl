@@ -71,7 +71,9 @@ my $size = @missed;
 if ($size >0){
     my ($from, $to, $subject, $content);
     $from ='rdistaff@usmc-mccs.org';
-    $to    ='rdistaff@usmc-mccs.org';
+    #TODO Uncomment next line, and delete line after that
+    #$to    ='rdistaff@usmc-mccs.org';
+    $to    ='kaveh.sari@usmc-mccs.org';
     $subject ="Warning: Some invoice files did not load!";
     $content = Dumper(\@missed);
     $log->info($subject . $content);
