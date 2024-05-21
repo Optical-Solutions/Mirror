@@ -1,0 +1,83 @@
+--------------------------------------------------------
+--  DDL for Procedure P_LOG_XREF_MODEL_RES_STATUS
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "MAXDATA"."P_LOG_XREF_MODEL_RES_STATUS" 
+as
+
+iSql 		long;
+cnt 		number;
+
+begin
+
+select nvl(max(log_id),0) into cnt from maxdata.lvxref_model_res_log;
+
+insert into maxdata.lvxref_model_res_log(log_id,
+	MERCH_LEVEL,
+	LAST_UPDATE,
+	MODEL_USERID,
+	MODEL_NAME,
+	MODEL_ID,
+	MODEL_PARENT_LV2,
+	MODEL_PARENT_LV3,
+	MODEL_PARENT_LV4,
+	MODEL_PARENT_LV5,
+	MODEL_PARENT_LV6,
+	MODEL_PARENT_LV7,
+	MODEL_PARENT_LV8,
+	MODEL_PARENT_LV9,
+	ATTR_ITEM_USERID,
+	LIVE_ITEM_USERID,
+	LIVE_ITEM_ID,
+	LIVE_PARENT_LV2,
+	LIVE_PARENT_LV3,
+	LIVE_PARENT_LV4,
+	LIVE_PARENT_LV5,
+	LIVE_PARENT_LV6,
+	LIVE_PARENT_LV7,
+	LIVE_PARENT_LV8,
+	LIVE_PARENT_LV9,
+	COMMENT_1,
+	COMMENT_2,
+	COMMENT_3,
+	COMMENT_4,
+	COMMENT_5)
+select cnt+1,
+    MERCH_LEVEL,
+	LAST_UPDATE,
+	MODEL_USERID,
+	MODEL_NAME,
+	MODEL_ID,
+	MODEL_PARENT_LV2,
+	MODEL_PARENT_LV3,
+	MODEL_PARENT_LV4,
+	MODEL_PARENT_LV5,
+	MODEL_PARENT_LV6,
+	MODEL_PARENT_LV7,
+	MODEL_PARENT_LV8,
+	MODEL_PARENT_LV9,
+	ATTR_ITEM_USERID,
+	LIVE_ITEM_USERID,
+	LIVE_ITEM_ID,
+	LIVE_PARENT_LV2,
+	LIVE_PARENT_LV3,
+	LIVE_PARENT_LV4,
+	LIVE_PARENT_LV5,
+	LIVE_PARENT_LV6,
+	LIVE_PARENT_LV7,
+	LIVE_PARENT_LV8,
+	LIVE_PARENT_LV9,
+	COMMENT_1,
+	COMMENT_2,
+	COMMENT_3,
+	COMMENT_4,
+	COMMENT_5
+from maxdata.lvxref_model_res;
+
+iSql:='truncate table maxdata.lvxref_model_res';
+execute immediate isql;
+
+end;
+
+/
