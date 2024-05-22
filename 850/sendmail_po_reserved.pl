@@ -20,7 +20,8 @@ use IBIS::E856;
 use IBIS::EWMS;
 use POSIX qw(strftime WNOHANG);
 use IBIS::Log::File;
-use IBIS::Email;
+use IBIS::Mail;
+# use IBIS::Email;
 my ($debug, @errors);
 
 ## config file, object, db connections
@@ -79,7 +80,9 @@ sub check_edi_850_po_reserved{
 	$content ="\n\n\nNeed to check on 850 log. \nTotal rows:".$ret_ref->[0][0].
                   "\ndelete from rdiusr.edi_850_po_reserved\n";
 	$wms->{'log_obj'}->info($subject . $content);
-	sendmail($from,$to,$subject, $content);  
+	#sendmail($from,$to,$subject, $content);  
+	notify($from,$to,$subject, $content);
+	
     }
     #TODO remove 1 or from logic
     if(1 or $ret_ref->[0][0] > 0){
@@ -87,7 +90,7 @@ sub check_edi_850_po_reserved{
        ## DROP TABLE
 	#TODO uncomment next line, delete line after that.
 	#my $drop_table = "drop table temp_edi_850_po_reserved";
-	my $drop_table = "drop table if exists temp_edi_850_po_reserved1";
+	my $drop_table = "drop table temp_edi_850_po_reserved1";
 	## COPY DATA TO THE NEW TABLE
 	#TODO uncomment next line, delete line after that.
 	#my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
@@ -127,7 +130,21 @@ sub check_edi_850_po_reserved{
     }
 
 }
+sub notify {
+	my ($from,$to,$subject, $content) = @_;
+    my $m = IBIS::Mail->new(
+        #TODO, remove line with kaveh sari, and uncomment next line.
+        #to      => [ 'rdistaff@usmc-mccs.org' ],
+        to      =>  [$to ],
+        from    => $from,
+        subject => $subject,
+        body    => $content
+    );
 
+    $m->send( );
+
+
+}
 =head
 This program is used to monitor the table edi_850_po_reserved. 
 The table is supposed to be empty after the 850 process is done for the day, 
