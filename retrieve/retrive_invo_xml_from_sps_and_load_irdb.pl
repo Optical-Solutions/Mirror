@@ -123,6 +123,7 @@ sub get_ftp_files_in_dir {
     my $msg = '';
     my $connection_retry = 0;
     my $ftp = ftp_connection($remote_dir);
+    print "ftp connection established\n" if ($debug);
     my $ary_ref = $ftp->ls;
     print "starting loop over ftpd files\n" if ($debug);
     foreach my $file_hash (@$ary_ref) {
