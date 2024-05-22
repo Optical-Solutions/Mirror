@@ -106,7 +106,8 @@ while ( defined( $file = readdir(DIR) ) ) {
         my $result;
         my $cmd =
             "perl /usr/local/mccs/lib/perl5/IBIS/EDI_TWM/bin/load_one_invoice_xml.pl -f $filename";
-        eval { system($cmd); };
+        #TODO uncomment next line.
+        # eval { system($cmd); };
     }
 }
 close DIR;
