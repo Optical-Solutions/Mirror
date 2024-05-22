@@ -67,10 +67,14 @@ sub check_edi_850_po_reserved{
     my $ret_ref = $dbh->selectall_arrayref($query);
     
     if($ret_ref->[0][0] > 0){
+	#TODO remove 	
+	$wms->{'log_obj'}->log_info("we found a record vow\n");	
 	## SEND EMAIL:
 	my ($from, $to, $subject, $content);
 	$from ='rdistaff@usmc-mccs.org';
-	$to    ='yuc@usmc-mccs.org';
+	#TODO uncomment next line, delete the line after that.
+	#$to    ='yuc@usmc-mccs.org';
+	$to    ='kaveh.sari@usmc-mccs.org';
 	$subject ="Warning: edi_850_po_reserved not empty!";
 	$content ="\n\n\nNeed to check on 850 log. \nTotal rows:".$ret_ref->[0][0].
                   "\ndelete from rdiusr.edi_850_po_reserved\n";
@@ -81,9 +85,13 @@ sub check_edi_850_po_reserved{
     if($ret_ref->[0][0] > 0){
         ## manage data in edi_850_po_reserved:      
        ## DROP TABLE
-	my $drop_table = "drop table temp_edi_850_po_reserved";
+	#TODO uncomment next line, delete line after that.
+	#my $drop_table = "drop table temp_edi_850_po_reserved";
+	my $drop_table = "drop table if exists temp_edi_850_po_reserved1";
 	## COPY DATA TO THE NEW TABLE
-	my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
+	#TODO uncomment next line, delete line after that.
+	#my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
+	my $copy_table = "create table temp_edi_850_po_reserved1 as (select * from edi_850_po_reserved) ";
 	## DELETE THE OLD DATA
 	my $truncate = "truncate table edi_850_po_reserved";
 

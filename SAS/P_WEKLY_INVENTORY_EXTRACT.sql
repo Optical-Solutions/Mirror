@@ -57,8 +57,7 @@ From (Select * From Wkly_Sas_Prod_Time_Pd
 -- Select /*+ FULL(I) PARALLEL(I,8) */                                          
 --       I.Site_Id, I.Style_Id, I.Color_Id, I.Size_Id, I.Dimension_Id,          
 --       I.Inven_Move_Type, I.Inven_Move_Qty, I.Inven_Move_Date,                
---       I.Retail_Price, 0 Retail_Price_Final, I.Landed_Unit_Cost, I.Average_Cos
-t,                                                                              
+--       I.Retail_Price, 0 Retail_Price_Final, I.Landed_Unit_Cost, I.Average_Cost,                                                                              
                                                                                 
 --       i.Merchandising_Year, i.Merchandising_Week, I.section_id               
 -- From   (Inventory_Movements@Mc2p) I                                          
@@ -138,8 +137,7 @@ End If;
 --      Select /*+ FULL(I) PARALLEL(I,8) */                                     
 --       I.Site_Id, I.Style_Id, I.Color_Id, I.Size_Id, I.Dimension_Id,          
 --       I.Inven_Move_Type, I.Inven_Move_Qty, I.Inven_Move_Date,                
---       I.Retail_Price, 0 Retail_Price_Final, I.Landed_Unit_Cost, I.Average_Cos
-t,                                                                              
+--       I.Retail_Price, 0 Retail_Price_Final, I.Landed_Unit_Cost, I.Average_Cost,                                                                              
                                                                                 
 --       i.Merchandising_Year, i.Merchandising_Week, I.section_id               
 -- From   (Inventory_Movements@Mc2r) I ' || v_where;                            
