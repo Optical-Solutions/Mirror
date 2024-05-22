@@ -205,6 +205,7 @@ sub ftp_connection {
 # SFTP connection
 sub ftp_connection {
     my $remote_dir = shift;
+    print "ftp connection\n" if ($debug);
     ## get SFTP object, named ftp but actually SFTP from existing package
     my $sftp = $edi->get_sps_ftp_object();
     $sftp->setcwd($remote_dir) or die "unable to change cwd: " . $sftp->error;
