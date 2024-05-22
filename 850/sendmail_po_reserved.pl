@@ -65,8 +65,8 @@ $wms->destructor();
 sub check_edi_850_po_reserved{
     my $query = "select count(*) from rdiusr.edi_850_po_reserved";
     my $ret_ref = $dbh->selectall_arrayref($query);
-    
-    if($ret_ref->[0][0] > 0){
+    #TODO remove 1 or from logic
+    if(1 or $ret_ref->[0][0] > 0){
 	#TODO remove 	
 	$wms->{'log_obj'}->log_info("we found a record vow\n");	
 	## SEND EMAIL:
@@ -81,8 +81,8 @@ sub check_edi_850_po_reserved{
 	$wms->{'log_obj'}->info($subject . $content);
 	sendmail($from,$to,$subject, $content);  
     }
-
-    if($ret_ref->[0][0] > 0){
+    #TODO remove 1 or from logic
+    if(1 or $ret_ref->[0][0] > 0){
         ## manage data in edi_850_po_reserved:      
        ## DROP TABLE
 	#TODO uncomment next line, delete line after that.
