@@ -1,0 +1,506 @@
+#!/usr/local/mccs/perl/bin/perl
+# ------------------------------------------------------------------------------------------
+# Ported by: Hanny Januarius
+# Date: Wed Dec  6 12:44:47 EST 2023
+#
+# Desc:
+# This script picks up all new/updated records from IBIS::rejected_sales_corrections table.
+# Next, update RMS tables iri_pos_sales and 
+# iri_pos_sale_details with corrected_barcodes.
+# Next, delete the updated records from RMS tables rejected_sales 
+# rejected_sale_details rejected_sale_details_msg rejected_sale_tenders;
+# Finally, send out email notifications of how many records 
+# are corrected and how many records remains.
+# ------------------------------------------------------------------------------------------
+
+use strict;
+use warnings;
+use Net::SMTP;
+use IBIS::DBI;
+use Net::SSH::Perl;
+use IBIS::SSH2CONNECT;
+use File::Basename;
+use File::Path;
+use IBIS::Log::File;
+use MCCS::Config;
+use File::Copy;
+use Date::Calc qw(:all);    # check_date
+use Readonly;
+use POSIX qw(strftime);
+use Data::Dumper;
+use Getopt::Long;
+use Fcntl qw(:flock);
+
+$| = 1;                     # Flush output
+
+#- One process at a time --------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#--------------------------------------------------
+
+#- Global variables --------------------------------------------------
+my $g_verbose;
+my $g_monthly;
+my $result = GetOptions(
+
+    "verbose" => \$g_verbose    # flag
+);
+
+Readonly my $g_logfile => '/usr/local/mccs/log/rejected_sale/' . basename(__FILE__) . '.log';
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1 } );
+$g_log->level(4);
+
+my $g_long_date = `date +%F_%H%M`;
+chomp($g_long_date);
+
+my $g_cfg                 = new MCCS::Config;
+my $g_updated_records     ;              # Record that is updated in IBIS
+my $g_count_rej_sale      = 0;
+my $g_count_rej_sale_detail     = 0;
+my $g_count_hash_detail         = {};
+my $g_count_rej_sale_detail_rem = 0;
+my $g_emails                    = $g_cfg->REJECTED_SALES->{emails};
+
+my $g_ibis_dbh = IBIS::DBI->connect(
+    dbname  => 'ibisora',
+    attribs => { PrintWarn => 0 }
+) or fatal_error("Error in IBIS DB Connection");
+
+my $g_rms_dbh = IBIS::DBI->connect(
+    dbname  => 'rms_p',
+    attribs => { PrintWarn => 0, AutoCommit => 0 }
+) or fatal_error("Error in Essentus DB Connection");
+
+my $g_ibis_sql_get = qq{
+       select 
+            sale_date, site_id, slip_no, 
+            line, register_id, corrected_barcode,
+            decode(new_or_upd_indicator,'true',1,'false',0) new_or_upd_indicator
+       from rejected_sale_corrections
+       where new_or_upd_indicator = 'true' 
+       and (corrected_barcode <> '' AND corrected_barcode is not null)
+    };
+
+my $g_ibis_sth_get = $g_ibis_dbh->prepare($g_ibis_sql_get);
+
+my $g_rms_sql_sale_details = qq{ update iri_pos_sale_details
+                      set bar_code_id = ?
+                      where 
+                                sale_date = to_date(?, 'YYYYMMDD')
+                          and   site_id = ?
+                          and   register_id = ?
+                          and   slip_no = ?
+                          and   line = ?
+    };
+my $g_rms_sql_sales = qq{ update iri_pos_sales
+                      set job_id = '999999999999',
+                          insert_to_sales_ind = 'Y'
+                      where 
+                                sale_date = to_date(?, 'YYYYMMDD')
+                          and   site_id = ?
+                          and   register_id = ?
+                          and   slip_no = ?
+    };
+
+my $g_rms_sth_sale_details = $g_rms_dbh->prepare($g_rms_sql_sale_details);
+my $g_rms_sth_sales        = $g_rms_dbh->prepare($g_rms_sql_sales);
+
+my $g_rms_sql_sale_details_select = qq{ select rejected_sale_id
+                 from   rejected_sale_details
+                 where  business_unit_id = 30
+                          and   sale_date = to_date(?, 'YYYYMMDD')
+                          and   site_id = ?
+                          and   register_id = ?
+                          and   slip_no = ?
+                          and   org_line = ?
+   };
+my $g_rms_sth_sale_details_select = $g_rms_dbh->prepare($g_rms_sql_sale_details_select);
+
+my $g_rms_sql_rs_del = qq{delete from rejected_sales 
+                          where 
+                          rejected_sale_id = ? 
+                         };
+my $g_rms_sql_rsd_del = qq{delete from rejected_sale_details 
+                           where 
+                           rejected_sale_id = ? 
+                           and org_line = ?
+                          };
+my $g_rms_sql_rsdm_del = qq{ delete from rejected_sale_details_msg
+                             where 
+                             rejected_sale_id = ? 
+                           };
+my $g_rms_sql_rst_del = qq{ delete from rejected_sale_tenders 
+                             where 
+                             rejected_sale_id = ? 
+                           };
+my $g_rms_sth_rs   = $g_rms_dbh->prepare($g_rms_sql_rs_del);
+my $g_rms_sth_rsd  = $g_rms_dbh->prepare($g_rms_sql_rsd_del);
+my $g_rms_sth_rsdm = $g_rms_dbh->prepare($g_rms_sql_rsdm_del);
+my $g_rms_sth_rst  = $g_rms_dbh->prepare($g_rms_sql_rst_del);
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub p_array {
+    my $sub = __FILE__ . " p_array";
+    my $ref = shift;
+    print map "$_\n", sort @{$ref};
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+# Get how many records which are remain in the table.
+# Records that are not corrected.
+#---------------------------------------------------------------------
+sub get_remaining_records {
+    my $sql = qq{ select count(*) from rejected_sale_details 
+                  where style_id is null and gl_account_id is null
+    };
+    my $sth = $g_rms_dbh->prepare($sql);
+    $sth->execute();
+    $g_count_rej_sale_detail_rem = ( $sth->fetchrow_array() )[0];
+}
+
+#---------------------------------------------------------------------
+# update_RMS_db
+# desc: update RMS database side with IBIS corrected barcode
+#       There are two updates and some record deletions
+#       Updates:
+#         1. iri_pos_sales table
+#         2. iri_pos_sale_details table
+#       Deletes:
+#         1. rejected_sales table
+#         2. rejected_sale_details table
+#         3. rejected_sale_details_msg table
+#         4. rejected_sale_tenders table
+#---------------------------------------------------------------------
+sub update_RMS_db {
+
+    my $records  = shift;
+    # Processing one by one new/update records into RMS db
+    #
+    my $n = 0;
+    foreach my $r (@{$records}) {
+        $n++;
+
+        # Get the count
+        $g_log->info(
+            " $n. "
+                . join(
+                '|',
+                (   $r->{sale_date}, $r->{site_id}, $r->{register_id},
+                    $r->{slip_no},   $r->{line}
+                )
+                )
+        );
+
+        # RMS Database
+        update_iri_pos_tables($r);
+    }
+}
+
+#---------------------------------------------------------------------
+# Using transaction here
+# Commit if both update are successfull
+#  1. update iri_pos_sale_details
+#  2. update iri_pos_sales
+#---------------------------------------------------------------------
+sub update_iri_pos_tables {
+    my $r = shift;
+
+    $g_log->info( "\tbarcode " . $r->{corrected_barcode} );
+
+    eval {
+        $g_rms_sth_sale_details->execute( $r->{corrected_barcode},
+            $r->{sale_date}, $r->{site_id}, $r->{register_id}, $r->{slip_no},
+            $r->{line} );
+    };
+
+    if ($@) {
+        $g_log->warn("$@");
+
+        return;
+    }
+    else {
+        $g_log->info("\tiri_pos_sale_details updated");
+
+        # Let's work on the header table
+        eval {
+            $g_rms_sth_sales->execute( $r->{sale_date}, $r->{site_id},
+                $r->{register_id}, $r->{slip_no} );
+        };
+        if ($@) {
+            $g_log->warn("$@");
+            return;
+        }
+        else {
+            $g_log->info("\tiri_pos_sales updated");
+            #-----------------------------------------------------
+            # Only delete IF records are updated in the iri tables
+            #-----------------------------------------------------
+            delete_corrected_records($r);
+            return;
+        }
+
+    }
+
+}
+
+#---------------------------------------------------------------------
+# DELETE corrected records from following table
+#   rejected_sales
+#   rejected_sale_details
+#   rejected_sale_details_msg
+#   rejected_sale_tenders
+#---------------------------------------------------------------------
+sub delete_corrected_records {
+    my $r = shift;
+
+    # Get the ID from detail table
+    # with this ID we can use for deletion
+    $g_rms_sth_sale_details_select->execute(
+        $r->{sale_date}, $r->{site_id}, $r->{register_id},
+        $r->{slip_no},   $r->{line}
+    );
+
+    my $id = ( $g_rms_sth_sale_details_select->fetchrow_array() )[0];
+
+    if ($id) {
+        $g_log->info("\trejected_sale_id = $id");
+        delete_with_id( $id, $r->{line} );
+    }
+    else {
+        $g_log->info("\tCANT delete. There is no rejected_sale_id found.");
+    }
+}
+
+#---------------------------------------------------------------------
+sub send_email {
+
+    my $records = shift;
+    my $host    = `hostname`;
+    my $subject = "RMS Rejected Barcodes Corrections on $host ";
+    my $date    = `date`;
+
+    get_remaining_records();
+    $g_count_rej_sale_detail = $#{$records} + 1;
+    $g_count_rej_sale_detail_rem--;
+    my $msg = <<EOMSG;
+Rejected Barcode Corrections
+
+
+Number of REJECTED_SALES reprocessed        = $g_count_rej_sale
+
+Number of REJECTED_SALE_DETAILS reprocessed = $g_count_rej_sale_detail
+
+Number of REJECTED_SALE_DETAILS remaining   = $g_count_rej_sale_detail_rem
+
+
+$date
+
+
+program name = $0
+EOMSG
+
+    foreach my $e ( keys %{$g_emails} ) {
+        $g_log->debug( "Sent email to $e " . $g_emails->{$e} );
+        $g_log->debug("  Sbj: $subject ");
+        $g_log->debug("  $msg ");
+        open( MAIL, "|/usr/sbin/sendmail -t" );
+        print MAIL "To: " . $g_emails->{$e} . " \n";
+        print MAIL "From: rdistaff\@usmc-mccs.org\n";
+        print MAIL "Subject: $subject\n";
+        print MAIL "\n";
+        print MAIL $msg;
+        print MAIL "\n";
+        print MAIL "\n";
+        close(MAIL);
+    }
+}
+
+#---------------------------------------------------------------------
+sub delete_with_id {
+    my $id   = shift;
+    my $line = shift;
+
+    eval { $g_rms_sth_rs->execute($id); };
+    if ($@) { $g_log->warn($@); }
+    else { $g_log->info("\tDel rejected_sales") }
+
+    eval {$g_rms_sth_rsd->execute( $id, $line ); };
+    if ($@) { $g_log->warn($@); }
+    else { $g_log->info("\tDel rejected_sale_details"); }
+
+    eval {$g_rms_sth_rsdm->execute($id);};
+    if ($@) { $g_log->warn($@); }
+    else { $g_log->info("\tDel rejected_sales_msg");}
+
+    eval {$g_rms_sth_rst->execute($id);};
+    if ($@) { $g_log->warn($@); }
+    else { $g_log->info("\tDel rejected_sales_tender"); }
+}
+
+#---------------------------------------------------------------------
+# get_IBIS_cor_barcode
+# desc: Pick up all the records which are updated in IBIS.
+#       They are marked by new_or_upd_indicator equal to 1
+#---------------------------------------------------------------------
+sub get_IBIS_cor_barcode {
+    my $a_ref = shift;
+
+    $g_ibis_sth_get->execute();
+    my $n = 0;
+    my @records = ();
+    while ( my $e = $g_ibis_sth_get->fetchrow_hashref ) {
+        $n++;
+        $g_log->debug(
+            join(
+                "  ",
+                (   $n,            $e->{sale_date},
+                    $e->{site_id}, $e->{slip_no},
+                    $e->{line},    $e->{register_id},
+                    $e->{corrected_barcode}
+                )
+            ),
+            "\n"
+        ) if $g_verbose;
+        push( @records, $e );
+    }
+    $g_log->info("NEW/UPDATED records: $n detected");
+    $g_count_rej_sale = $n;
+
+    return \@records;
+}
+
+#---------------------------------------------------------------------
+sub update_IBIS_db {
+    my $records = shift;
+
+    my $sql = qq{ update rejected_sale_corrections
+                  set new_or_upd_indicator = 0,
+                  corrected_date = curdate()
+                  where sale_date = ?
+                  and   site_id = ?
+                  and   slip_no = ?
+                  and   line = ? 
+                  and   register_id = ?
+    };
+
+    my $sth = $g_ibis_dbh->prepare($sql);
+
+    foreach my $r (@{$records}) {
+        $sth->execute(
+            $r->{sale_date}, $r->{site_id}, $r->{slip_no},
+            $r->{line},      $r->{register_id}
+        );
+        $g_log->info(
+            " set IBIS new/upd indicator to 0 on "
+                . join(
+                '|',
+                (   $r->{sale_date}, $r->{site_id}, $r->{register_id},
+                    $r->{slip_no},   $r->{line}
+                )
+                )
+        );
+
+    }
+}
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+    $g_log->info("-- Start ----------------------------------------");
+
+    $g_updated_records = get_IBIS_cor_barcode();
+    update_RMS_db($g_updated_records);     # Delete also here
+    update_IBIS_db($g_updated_records);    # Set the new/upd ind to 0.
+    send_email($g_updated_records);
+
+    $g_log->info("REJECTED_SALES reprocessed = $g_count_rej_sale");
+    $g_log->info("REJECTED_SALE_DETAILS reprocessed = $g_count_rej_sale_detail");
+    $g_rms_dbh->commit;
+    $g_ibis_dbh->disconnect;
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    $g_log->info($@);
+    die "$@ ";
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
+
+__END__
+
+=pod
+
+=head1 NAME
+
+reject_sale_corrections
+
+=head1 SYNOPSIS
+
+    Daily processing
+    os> /usr/local/mccs/bin/reject_sale_corrections
+    
+    Verbose mode
+    os> /usr/local/mccs/bin/reject_sale_corrections -verbose
+
+=head1 DESCRIPTION
+
+This script picks up all new/updated records from IBIS::rejected_sales_corrections table.
+Next, update RMS tables iri_pos_sales and iri_pos_sale_details with corrected_barcodes.
+Next, delete the updated records from RMS tables rejected_sales rejected_sale_details rejected_sale_details_msg rejected_sale_tenders;
+Finally, send out email notifications of how many records are corrected and how many records remains.
+
+=head1 HISTORY
+
+=over 4
+
+=item Wed Sep  8 08:20:15 EDT 2010
+
+Conceived.
+
+=back
+
+=head1 BUGS
+
+None
+
+=head1 AUTHOR (S)
+
+Hanny Januarius B<januariush@usmc-mccs.org>
+
+=cut
+
