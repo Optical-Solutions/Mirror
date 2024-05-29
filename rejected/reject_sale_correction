@@ -68,6 +68,7 @@ my $g_count_rej_sale_detail_rem = 0;
 #TODO uncomment next line, delete after that.
 #my $g_emails                    = $g_cfg->REJECTED_SALES->{emails};
 my $g_emails                    = ('kav' => 'kaveh.sari@usmc-mccs.org');
+
 my $g_ibis_dbh = IBIS::DBI->connect(
     dbname  => 'ibisora',
     attribs => { PrintWarn => 0 }
