@@ -12,6 +12,10 @@
 # Finally, send out email notifications of how many records 
 # are corrected and how many records remains.
 # ------------------------------------------------------------------------------------------
+#Ported by:  Kaveh Sari
+#Date:  Fri May 24 14:40:49 EDT 2024
+# 
+#-------------------------------------------------------------------------------------------
 
 use strict;
 use warnings;
@@ -61,7 +65,9 @@ my $g_count_rej_sale      = 0;
 my $g_count_rej_sale_detail     = 0;
 my $g_count_hash_detail         = {};
 my $g_count_rej_sale_detail_rem = 0;
-my $g_emails                    = $g_cfg->REJECTED_SALES->{emails};
+#TODO uncomment next line, delete line after that.
+#my $g_emails                    = $g_cfg->REJECTED_SALES->{emails};
+my $g_emails                    = (kav => 'kaveh.sari@usmc-mccs.org');
 
 my $g_ibis_dbh = IBIS::DBI->connect(
     dbname  => 'ibisora',
