@@ -1,0 +1,207 @@
+#!/usr/local/mccs/perl/bin/perl
+#---------------------------------------------------------------------
+# Program:  e832_send_date_check
+# Author:   Hanny Januarius
+# Created:  Wed Jul  2 11:16:05 EDT 2014
+# Description: Checks the send_date of a batch and compare them with 
+#              batch date, if more than a day, send out emails to 
+#              RMS Analyst group.
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+
+use Fcntl qw(:flock);
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+my $g_emails = $g_cfg->global_emails->{support};
+my $g_emails_rdi = $g_cfg->global_emails->{rdi};
+#print Dumper $g_emails;
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+Readonly my $g_logfile => '/usr/local/mccs/log/832/' . basename(__FILE__) . '.log';
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+
+my $g_rep = "";
+my @types = qw(style cost barcode stockmodel characteristic description);
+my $server = `hostname`;
+chomp($server);
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    foreach my $name ( sort keys %{$g_emails} ) {
+        $g_log->info( "Sent email to $name (" . $g_emails->{$name} . ")" );
+        $g_log->info("  Sbj: $msg_sub ");
+        $g_log->debug("  $msg_bod1 ");
+        $g_log->debug("  $msg_bod2 ");
+        open( MAIL, "|/usr/sbin/sendmail -t" );
+        print MAIL "To: " . $g_emails->{$name} . " \n";
+        print MAIL "From: rdistaff\@usmc-mccs.org\n";
+        print MAIL "Subject: $msg_sub \n";
+        print MAIL "\n";
+        print MAIL $msg_bod1;
+        print MAIL $msg_bod2;
+        print MAIL "\n";
+        print MAIL "\nServer: $server\n";
+        print MAIL "\n";
+        close(MAIL);
+    }
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+sub get_sql {
+    my $type = shift;
+    my $table;
+    my $sql;
+#my @types = qw(style cost barcode stockmodel characteristic description);
+    if ($type eq "style") {
+        $table = 'v_e832_batches_items';
+    } elsif( $type eq "cost") {
+        $table = 'v_e832_batches_stylecosts';
+    } elsif( $type eq "barcode") {
+        $table = 'v_e832_batches_barcodes';
+    } elsif( $type eq "stockmodel") {
+        $table = 'v_e832_batches_smodel';
+    } elsif( $type eq "characteristic") {
+        $table = 'v_e832_batches_stylecharacs';
+    } elsif( $type eq "description") {
+        $table = 'v_e832_batches_style_desc';
+    } else {
+        fatal_error("Invalid sql type '$type' passed in args");
+    }
+    $sql = <<"EOSQL";
+select e832_batch_id, application_user, batch_date
+  from $table
+ where batch_status in ('C', 'P', 'E')
+   and send_date is null
+   and trunc(batch_date) < trunc(sysdate - 1)
+   --and trunc(batch_date) > trunc(sysdate - 3)
+order by batch_date desc
+EOSQL
+
+    return $sql;
+}
+#---------------------------------------------------------------------
+sub get_item {
+    my $dbh = shift;
+    my $type = shift;
+
+    unless( defined($dbh) ) { fatal_error("No db handle") }
+    my $sql = get_sql($type);
+    my $sth = $dbh->prepare($sql);
+    $sth->execute;
+
+    my $tmp = '';
+    while ( my $row = $sth->fetchrow_hashref()) {
+        $tmp .= sprintf("% 9s % 12s %-15s\n",
+                             $row->{e832_batch_id},
+                             $row->{batch_date},
+                             $row->{application_user}
+                         );
+    }
+    if ($tmp) {
+        $tmp = sprintf("% 9s % 12s %-15s\n",
+                             "Group ID",
+                             "Group Date",
+                             "User"
+                         ) . $tmp;
+        $tmp = "\n--== TYPE is $type ==--\n" . $tmp;
+    }
+
+    $g_rep .= $tmp;
+}
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+
+    $g_log->info("Open DB connection to RMS DB");
+    my $dbh = IBIS::DBI->connect(dbname => 'rms_p');
+
+
+    foreach my $type (@types) {
+       get_item($dbh, $type);
+    }
+
+    $g_log->info($g_rep);
+
+    if ( $g_rep ) {
+        my $msg1 =<<EO1;
+RMS Date is null on below batches.
+It means these batches were not uploaded into their corresponding IRI tables.
+Please mark their records as dirty and double-flip the batch statuses to "Submitted to RMS".
+EO1
+        send_mail("RMS Product Maintenante Monitor (E832) $g_long_date", 
+                  $msg1 , $g_rep);
+    }
+
+    $g_log->info("Close DB connection to RMS DB");
+    $dbh->disconnect;
+
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date,
+        "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
