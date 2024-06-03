@@ -1,0 +1,239 @@
+#!/usr/local/mccs/perl/bin/perl
+#---------------------------------------------------------------------
+# Program    : prch_refresh_user_list
+# Author     : Hanny Januarius
+# Created    : Thu Mar 15 07:20:42 EDT 2018
+# Description: Daily refresh of user list
+#              This user list is populating the drop down menu in the
+#              filter box.
+#              
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use File::Copy;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use Getopt::Std;
+use DateTime;
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Get option switches -----------------------------------------------
+our %g_opt = ( d => 0 );
+getopts( 'd', \%g_opt );
+my $DEBUG = $g_opt{d};
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+
+my $g_emails      = $g_cfg->prch_spot_prices->{emails}; 
+my $g_cust_emails = $g_cfg->prch_spot_prices->{customer_email};
+my $g_dbname      = $g_cfg->prch_spot_prices->{dbname};
+my $g_user_list   = $g_cfg->prch_spot_prices->{user_list_file};
+
+if ($DEBUG) {
+    print Dumper $g_cfg->prch_spot_prices;
+}
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+if ($DEBUG) {
+    $g_verbose = 1;
+}
+my $progname = basename(__FILE__);
+$progname =~ s/\.\w+$//;
+Readonly my $g_logfile => '/usr/local/mccs/log/PriceChanges/' . $progname . '.log';
+
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`;
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+my $g_dbh   = my $g_ba_sql;
+my $g_ba_sth;
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail_html {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    my $css = <<ECSS;
+<style>
+p, body {
+    color: #000000;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+.e832_table_nh {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    border-collapse: collapse;
+    border: 1px solid #69c;
+    margin-right: auto;
+    margin-left: auto;
+}
+.e832_table_nh caption {
+    background-color: #FFF;
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 12px 17px 5px 17px;
+    color: #039;
+}
+.e832_table_nh th {
+    padding: 1px 4px 0px 4px;
+    background-color: RoyalBlue;
+    font-weight: normal;
+    font-size: 11px;
+    color: #FFF;
+}
+.e832_table_nh tr:hover td {
+    /*
+    color: #339;
+    background: #d0dafd;
+    padding: 2px 4px 2px 4px;
+    */
+}
+.e832_table_nh td {
+    padding: 2px 3px 1px 3px;
+    color: #000;
+    background: #fff;
+}
+</style>
+ECSS
+
+    open( MAIL, "|/usr/sbin/sendmail -t" );
+    print MAIL "To: " . $g_cust_emails->{'Hanny Januarius'} . " \n";
+    print MAIL "From: rdistaff\@usmc-mccs.org\n";
+    print MAIL "Cc: " . $g_emails->{'Hanny Januarius'} . " \n";
+    print MAIL "Subject: $msg_sub \n";
+    print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
+        . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
+
+    #print MAIL $msg_bod2;
+    print MAIL "\n";
+    print MAIL "\n";
+    print MAIL "Server: $g_host\n";
+    print MAIL "\n";
+    print MAIL "\n";
+    close(MAIL);
+
+} ## end sub send_mail_html
+
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body     = ( $msg_bod1, $msg_bod2 );
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_emails);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+} ## end sub send_mail
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+} ## end sub fatal_error
+
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+
+    my $dbh = IBIS::DBI->connect(dbname=>$g_dbname) or 
+       fatal_error("Could not connect to $g_dbname");
+    my $sql = qq(select username from dba_menus_grant where id = 35 order by username);
+    my $sth = $dbh->prepare($sql) or fatal_error("Could not prepare $sql");
+    $g_log->info("  Query $g_dbname");
+    $sth->execute();
+    my @list = ();
+    
+    $g_log->info("  Fetching records");
+    my $n = 0;
+    while (my $user = ($sth->fetchrow_array)[0]) {
+        $n++;
+        push(@list, $user);
+    }
+    $g_log->info("  $n records");
+    my $tmp_file = '/tmp/prch_ul.tmp';
+    if ( $#list > 10) {
+        $g_log->info("  Make $tmp_file");
+        open(my $fout, '>', $tmp_file) 
+            or fatal_error("Could not write $tmp_file coz $!");
+        print $fout map "$_\n", @list;
+        close $fout;
+        print $g_user_list, "\n" if $DEBUG;
+        $g_log->info("  Copy $tmp_file to");
+        $g_log->info("    $g_user_list");
+        copy($tmp_file,  $g_user_list) or fatal_error("Could not copy $tmp_file to $g_user_list");
+        unlink($tmp_file);
+    } else {
+        fatal_error("Odd, why the user list is less than 10 records! Abort generating $g_user_list");
+    }
+
+    $g_log->info("-- End ------------------------------------------");
+
+} ## end sub my_main
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
