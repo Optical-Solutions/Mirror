@@ -124,7 +124,7 @@ ECSS
     open( MAIL, "|/usr/sbin/sendmail -t" );
     #TODO restore 124,127 & delete line 125 (kaveh sari)
     #print MAIL "To: " . $g_cust_emails->{'Hanny Januarius'} . " \n";
-    print MAIL "To: " . "kaveh.sari@usmc-mccs.org" . " \n";
+    print MAIL "To: " . 'kaveh.sari@usmc-mccs.org' . " \n";
     print MAIL "From: rdistaff\@usmc-mccs.org\n";
     #print MAIL "Cc: " . $g_emails->{'Hanny Januarius'} . " \n";
     print MAIL "Subject: $msg_sub \n";
