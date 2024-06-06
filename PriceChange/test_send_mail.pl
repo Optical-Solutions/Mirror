@@ -21,4 +21,4 @@ sub send_mail {
     $go_mail->hostName($g_host);
     $go_mail->send_mail();
 } ## end sub send_mail
-send_mail('testing email');
+send_mail('testing email','A','B');
