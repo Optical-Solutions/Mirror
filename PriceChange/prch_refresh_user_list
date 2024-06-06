@@ -155,6 +155,7 @@ sub send_mail {
     $go_mail->sendTo($g_emails);
     $go_mail->msg(@body);
     $go_mail->hostName($g_host);
+    print "hello before send mail 158";
     $go_mail->send_mail();
 } ## end sub send_mail
 
