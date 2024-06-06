@@ -42,7 +42,7 @@ my $g_emails      = $g_cfg->prch_spot_prices->{emails};
 my $g_cust_emails = $g_cfg->prch_spot_prices->{customer_email};
 my $g_dbname      = $g_cfg->prch_spot_prices->{dbname};
 my $g_user_list   = $g_cfg->prch_spot_prices->{user_list_file};
-my %d_emails      = ("kav" =>"kaveh.sari@usmc.mccs.org");
+my %d_emails      = ("kav" =>'kaveh.sari@usmc.mccs.org');
 $g_emails         = \%d_emails;
 if ($DEBUG) {
     print Dumper $g_cfg->prch_spot_prices;
