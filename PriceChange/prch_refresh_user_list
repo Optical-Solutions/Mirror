@@ -42,11 +42,9 @@ my $g_emails      = $g_cfg->prch_spot_prices->{emails};
 my $g_cust_emails = $g_cfg->prch_spot_prices->{customer_email};
 my $g_dbname      = $g_cfg->prch_spot_prices->{dbname};
 my $g_user_list   = $g_cfg->prch_spot_prices->{user_list_file};
-my %d_emails      = ("kav" =>'kaveh.sari@usmc.mccs.org');
-$g_emails         = \%d_emails;
+
 if ($DEBUG) {
     print Dumper $g_cfg->prch_spot_prices;
-    print Dumper $g_emails;
 }
 
 #- Global variables --------------------------------------------------
@@ -122,11 +120,9 @@ p, body {
 ECSS
 
     open( MAIL, "|/usr/sbin/sendmail -t" );
-    #TODO restore 124,127 & delete line 125 (kaveh sari)
-    #print MAIL "To: " . $g_cust_emails->{'Hanny Januarius'} . " \n";
-    print MAIL "To: " . 'kaveh.sari@usmc-mccs.org' . " \n";
+    print MAIL "To: " . $g_cust_emails->{'kav'} . " \n";
     print MAIL "From: rdistaff\@usmc-mccs.org\n";
-    #print MAIL "Cc: " . $g_emails->{'Hanny Januarius'} . " \n";
+    print MAIL "Cc: " . $g_emails->{'kav'} . " \n";
     print MAIL "Subject: $msg_sub \n";
     print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
         . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
@@ -155,7 +151,6 @@ sub send_mail {
     $go_mail->sendTo($g_emails);
     $go_mail->msg(@body);
     $go_mail->hostName($g_host);
-    print "hello before send mail 158";
     $go_mail->send_mail();
 } ## end sub send_mail
 
@@ -175,7 +170,6 @@ sub fatal_error {
 # Pseudo Main which is called from MAIN
 #---------------------------------------------------------------------
 sub my_main {
-    fatal_error("testing fatal error");
     my $sub = __FILE__ . " the_main";
     if ($g_verbose) {
 
