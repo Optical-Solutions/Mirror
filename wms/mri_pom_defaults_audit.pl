@@ -40,7 +40,7 @@ my $g_cfg     = new MCCS::Config;
 #TODO uncomment next line, and delete next two lines.
 #my $g_emails  = $g_cfg->pom_defaults_audit->{emails};
 my $g_emails;
-$g_emails->{'kav'}='kaveh.sari@usmc.mccs.org';
+$g_emails->{'kav'}='kaveh.sari@usmc-mccs.org';
 my $g_dbname = $g_cfg->pom_defaults_audit->{db_name};
 
 #print Dumper $g_emails;
@@ -75,6 +75,7 @@ chomp($g_host);
 # }
 
 sub send_mail {
+    print 'entering send mail';
 	my $msg_sub  = shift;
 	my $msg_bod1 = shift;
 	my $msg_bod2 = shift || '';
@@ -188,9 +189,10 @@ my $sql = qq(
       and t.column_name in ('EDI_PO_IND','EDI_856_TEST_MODE_IND','CARTON_TRCK_ASN_IND') 
       and t.new_value != t.old_value 
       and substr(t.primary_key,4) = v.vendor_id
-      and t.operation_date >= sysdate - 1
+      and t.operation_date >= sysdate - 20
       order by vendor_name asc
 );
+#TODO Re-set to sysdate - 1 in sql above 
     my $sth = $dbh->prepare($sql);
     
     $sth->execute();
