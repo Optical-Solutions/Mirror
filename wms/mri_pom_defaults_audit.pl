@@ -9,7 +9,14 @@
 #
 # Ported by: Hanny Januarius
 # Date: Mon Dec 11 08:48:42 EST 2023
-#
+
+# Re-Ported by :  Kaveh Sari
+# Date: Fri Jun  7 14:25:25 EDT 2024
+# Commented out the first occurance of sub send_mail which uses 
+# the MCCS:WMS::Sendmail.  The program alternatively uses Unix mail in cases of 
+# fatal errors only, and also uses explict /usr/sbin/sendmail after SQL execution.
+# The fact that the WMS Sendmail is not used, may indicate a non working libaray function which
+# would utilize the SMTP service, which was discovered not be operational 6/7/2024.
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -72,7 +79,6 @@ chomp($g_host);
 # }
 
 sub send_mail {
-    print 'entering send mail';
 	my $msg_sub  = shift;
 	my $msg_bod1 = shift;
 	my $msg_bod2 = shift || '';
