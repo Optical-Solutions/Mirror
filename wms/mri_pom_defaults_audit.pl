@@ -279,11 +279,10 @@ EOM
 
         if ($tmp) {
             my $subject = "POM_DEFAULTS CHANGES";
-      		$g_log->info( "Sent email to $name");
+            foreach my $name ( sort values %{$g_emails} ) {
+            $g_log->info( "Sent email to $name");
 		    $g_log->info("  Sbj: $subject");
 		    $g_log->info("  $msg");
-   
-            foreach my $name ( sort values %{$g_emails} ) {
             open( MAIL, "|/usr/sbin/sendmail -t" );
             
             ## Mail Header
