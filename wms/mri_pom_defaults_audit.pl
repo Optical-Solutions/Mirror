@@ -1,6 +1,7 @@
 #!/usr/local/bin/perl --
 #---------------------------------------------------------------------
 # Program:  wms_pom_defaults_audit.pl
+# Program:  mri_pom_defaults_audit.pl  ** UPDated by Kaveh Sari to the file name on server**
 # Author:   Armando Someillan
 # Created:  Fri April 24, 2017
 # Description: Generate/send email with html report showing vendors 
@@ -19,7 +20,7 @@ use Readonly;
 use MCCS::Config;
 use Data::Dumper;
 use Fcntl qw(:flock);
-use MCCS::WMS::Sendmail;
+# use MCCS::WMS::Sendmail;
 use Getopt::Long;
 
 # Flush output
@@ -36,7 +37,10 @@ my $options = ( GetOptions( 'job_id=s' => \$job_id) );
 
 #- Configuration files -----------------------------------------------
 my $g_cfg     = new MCCS::Config;
-my $g_emails  = $g_cfg->pom_defaults_audit->{emails};
+#TODO uncomment next line, and delete next two lines.
+#my $g_emails  = $g_cfg->pom_defaults_audit->{emails};
+my $g_emails;
+$g_emails->{'kav'}='kaveh.sari@usmc.mccs.org';
 my $g_dbname = $g_cfg->pom_defaults_audit->{db_name};
 
 #print Dumper $g_emails;
@@ -49,26 +53,26 @@ chomp($g_long_date);
 my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
 my $g_host = `hostname`;
 chomp($g_host);
-my $go_mail = MCCS::WMS::Sendmail->new();
+# my $go_mail = MCCS::WMS::Sendmail->new();
 
 #---------------------------------------------------------------------
 # SUBS
 #---------------------------------------------------------------------
-sub send_mail {
-    my $msg_sub  = shift;
-    my $msg_bod1 = shift;
-    my $msg_bod2 = shift || '';
-    my @body     = ( $msg_bod1, $msg_bod2 );
+# sub send_mail {
+#     my $msg_sub  = shift;
+#     my $msg_bod1 = shift;
+#     my $msg_bod2 = shift || '';
+#     my @body     = ( $msg_bod1, $msg_bod2 );
 
-    return if $g_verbose;    # Dont want to send email if on verbose mode
+#     return if $g_verbose;    # Dont want to send email if on verbose mode
 
-    $go_mail->logObj($g_log);
-    $go_mail->subject($msg_sub);
-    $go_mail->sendTo($g_emails);
-    $go_mail->msg(@body);
-    $go_mail->hostName($g_host);
-    $go_mail->send_mail();
-}
+#     $go_mail->logObj($g_log);
+#     $go_mail->subject($msg_sub);
+#     $go_mail->sendTo($g_emails);
+#     $go_mail->msg(@body);
+#     $go_mail->hostName($g_host);
+#     $go_mail->send_mail();
+# }
 
 sub send_mail {
 	my $msg_sub  = shift;
