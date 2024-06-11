@@ -1,0 +1,10 @@
+#!/usr/local/mccs/perl/bin/perl
+##--------------------------------------------------------------------------
+##Ported by : Soumya K Bhowmic
+##Date      : 12/08/2023
+##
+##Brief Desc: This program extracts the UPC codes and the associated
+##            description for FraudWatch (TE-Triversity)
+##
+##            The program must run a rdiusr.
+## --------------------------------------------------------------------------  

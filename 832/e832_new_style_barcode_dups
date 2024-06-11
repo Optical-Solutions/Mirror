@@ -1,0 +1,257 @@
+#!/usr/bin/perl
+#---------------------------------------------------------------------
+# Program    : e832_new_style_barcode_dups
+# Author     : Hanny Januarius
+# Created    : Wed Nov  2 09:37:05 EDT 2016
+# Description: Report barcode dups on E832 Items (New Style barcode
+#              pairings.
+#              This issue in on e832_utils.process_iri_items, on Merge
+#              bit.
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use IBIS::DB_Utils qw(rms_p_connect);
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+my $g_emails = $g_cfg->e832->{programmer_emails};
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+Readonly my $g_logfile => '/usr/local/mccs/log/' . basename(__FILE__) . '.log';
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`; 
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body = ($msg_bod1, $msg_bod2);
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_emails);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+    my $sql =<<ENDSQL;
+    select bar_code_id, rms_style_id, count(*) count
+    from v_e832_iri_items_send
+    group by bar_code_id, rms_style_id 
+    having count(*) > 1
+ENDSQL
+    my $dbh = rms_p_connect();
+    my $sth = $dbh->prepare($sql);
+
+    $sth->execute();
+    my $dat = "";
+    my $dat2 = "";
+    my $sql2 = "";
+    my @dup_bar = ();
+    while ( my $row = $sth->fetchrow_hashref) {
+        $dat .= '<tr>' 
+                . '<td>' . $row->{bar_code_id} . '</td>'
+                . '<td>' . $row->{rms_style_id} . '</td>'
+                . '<td>' . $row->{count} .'</td>'
+                ."</tr>\n";
+        push(@dup_bar, $row->{bar_code_id});
+    }
+    if ( $dat ) {
+    my $sql_join = join(',',@dup_bar);
+    $sql2 =<<END2;
+    select v.bar_code_id, v.rms_style_id, v.e832_batch_id, b.application_user 
+    from v_e832_iri_items_send v, e832_batches b
+    where v.bar_code_id in ($sql_join)
+    and   v.e832_batch_id = b.e832_batch_id 
+    order by v.bar_code_id, v.e832_batch_id
+END2
+    my $sth2 = $dbh->prepare($sql2);
+    $sth2->execute();
+    my $prev = "";
+    while ( my $row = $sth2->fetchrow_hashref) {
+        if (  ( $prev ne $row->{bar_code_id})) {
+        $dat2 .= '<tr>' 
+                . '<td>' . $row->{bar_code_id} . '</td>'
+                . '<td>' . $row->{rms_style_id} . '</td>'
+                . '<td>' . $row->{e832_batch_id} . '</td>'
+                . '<td>' . $row->{application_user} . '</td>'
+                ."</tr>\n";
+        } else {
+        $dat2 .= '<tr>' 
+                . '<td></td>'
+                . '<td>' . $row->{rms_style_id} . '</td>'
+                . '<td>' . $row->{e832_batch_id} . '</td>'
+                . '<td>' . $row->{application_user} . '</td>'
+                ."</tr>\n";
+        }
+        $prev = $row->{bar_code_id};
+    }
+    }
+
+    my $css     = <<ECSS;
+<style>
+p, body {
+    color: #000000;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+.e832_table_nh {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    border-collapse: collapse;
+    border: 1px solid #69c;
+    margin-right: auto;
+    margin-left: auto;
+}
+.e832_table_nh caption {
+    font-size: 11pt;
+    font-weight: bold;
+    padding: 12px 17px 5px 17px;
+    color: #039;
+}
+.e832_table_nh th {
+    padding: 1px 4px 0px 4px;
+    background-color: RoyalBlue;
+    font-weight: normal;
+    font-size: 11px;
+    color: #FFF;
+}
+.e832_table_nh tr:hover td {
+    /*
+    color: #339;
+    background: #d0dafd;
+    padding: 2px 4px 2px 4px;
+    */
+}
+.e832_table_nh td {
+    padding: 2px 3px 1px 3px;
+    color: #000;
+    background: #fff;
+}
+</style>
+ECSS
+    my $timestamp = `date`; chomp($timestamp);
+    my $g_host = `hostname`; chomp($g_host);
+    my $msg = <<EOM;
+<p>Batches with dups</p>
+<table class="e832_table_nh">
+        <tr>
+            <th>Barcode</th>
+            <th>Style</th>
+            <th>Batch</th>
+            <th>Application User</th>
+        </tr>
+        $dat2
+</table>
+<p>Detail Duplicates</p>
+<table class="e832_table_nh">
+        <tr>
+            <th>Barcode</th>
+            <th>Style</th>
+            <th>Dups count</th>
+        </tr>
+        $dat
+</table>
+<p style="font-size: 11px;">$timestamp</p>
+<p style="font-size: 10px;">server: $g_host</p>
+EOM
+    my $from = 'rdistaff@usmc-mccs.org';
+    if ( $dat ) {
+        my $subject = "E832 Duplicate detected on Items Style Barcode upload.";
+        open( MAIL, "|/usr/sbin/sendmail -t" );
+        ## Mail Header
+        print MAIL "To: " . 'januariush@usmc-mccs.org' . "\n";
+        print MAIL "From: $from\n";
+        print MAIL "Subject: $subject\n";
+
+        ## Mail Body
+        print MAIL qq(Content-Type: text/html; charset=ISO-8859-1\n\n)
+          . "<html><head>$css</head>\n"
+          . qq(<body><p style="color: red;">Please remove dup records or PROCESS IRI will fail!</p>\n)
+          . $msg . "\n"
+          . "</body></html>";
+
+        close(MAIL); 
+
+       $g_log->info("$dat\n$dat2");
+
+    } else {
+       $g_log->info("No dups detected");
+    }
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date,
+        "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
