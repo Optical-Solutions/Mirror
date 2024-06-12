@@ -65,10 +65,7 @@ my $query = qq(
      select host_group_id
       from T_AL_HOST_SQL_EXPORT_QUEUE_ARC 
       where export_type ='INVENTORY' 
-      -- #TODO remove next line
-      and ronum < 10
-    -- #TODO uncomment next line.
- --       AND STATUS ='P' 
+       AND STATUS ='P' 
 );
 
 my $value_ref;
@@ -82,9 +79,7 @@ if ($@){
 
 my $subject = 'UNPROCESSED HJ INVENTORY SNAP SHOT!';
 my $contents ='';
-#TODO unocmment next line and delete line after that
-#my $email_address ='rdistaff@usmc-mccs.org';
-my $email_address ='kaveh.sari@usmc-mccs.org';
+my $email_address ='rdistaff@usmc-mccs.org';
 my $from = 'rdistaff@usmc-mccs.org';
 
 for ( my $i = 0 ; $i < @$value_ref ; $i++ ) {
