@@ -95,10 +95,10 @@ sub my_main {
     my $sql =<<ENDSQL;
     select bar_code_id, rms_style_id, count(*) count
     from v_e832_iri_items_send
+    where rownum < 5
     group by bar_code_id, rms_style_id 
     -- #TODO uncomment next line, and remove line after that.
     -- having count(*) > 1
-    and rownum < 5
 ENDSQL
     my $dbh = rms_p_connect();
     my $sth = $dbh->prepare($sql);
