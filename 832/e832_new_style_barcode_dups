@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 #---------------------------------------------------------------------
 # Program    : e832_new_style_barcode_dups
 # Author     : Hanny Januarius
