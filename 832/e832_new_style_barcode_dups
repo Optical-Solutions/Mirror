@@ -76,6 +76,8 @@ sub fatal_error {
 # Pseudo Main which is called from MAIN
 #---------------------------------------------------------------------
 sub my_main {
+    #TODO remove next line
+    my $x=1/0;
     my $sub = __FILE__ . " the_main";
     if ($g_verbose) {
 
