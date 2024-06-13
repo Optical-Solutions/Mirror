@@ -30,7 +30,10 @@ flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
-my $g_emails = $g_cfg->e832->{programmer_emails};
+#TODO remove next two lines, and uncomment after that.
+my $g_emails;
+$g_emails->{kav}'kaveh.sari@usmc.mccs.org';
+# my $g_emails = $g_cfg->e832->{programmer_emails};
 
 #- Global variables --------------------------------------------------
 my $g_verbose = 0;
@@ -93,7 +96,9 @@ sub my_main {
     select bar_code_id, rms_style_id, count(*) count
     from v_e832_iri_items_send
     group by bar_code_id, rms_style_id 
-    having count(*) > 1
+    -- #TODO uncomment next line, and remove line after that.
+    -- having count(*) > 1
+    and rownum < 5
 ENDSQL
     my $dbh = rms_p_connect();
     my $sth = $dbh->prepare($sql);
@@ -215,7 +220,9 @@ EOM
         my $subject = "E832 Duplicate detected on Items Style Barcode upload.";
         open( MAIL, "|/usr/sbin/sendmail -t" );
         ## Mail Header
-        print MAIL "To: " . 'januariush@usmc-mccs.org' . "\n";
+        # TODO, remove next line, and uncomment after that.
+         print MAIL "To: " . 'kaveh.sari@usmc-mccs.org' . "\n";
+        # print MAIL "To: " . 'januariush@usmc-mccs.org' . "\n";
         print MAIL "From: $from\n";
         print MAIL "Subject: $subject\n";
 
