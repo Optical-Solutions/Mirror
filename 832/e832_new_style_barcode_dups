@@ -32,7 +32,7 @@ flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 my $g_cfg = new MCCS::Config;
 #TODO remove next two lines, and uncomment after that.
 my $g_emails;
-$g_emails->{kav}'kaveh.sari@usmc.mccs.org';
+$g_emails->{kav}='kaveh.sari@usmc.mccs.org';
 # my $g_emails = $g_cfg->e832->{programmer_emails};
 
 #- Global variables --------------------------------------------------
