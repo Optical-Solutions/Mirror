@@ -39,7 +39,7 @@ sub send_mail {
 	#$sm->msg( 'THERE is no MSG '  );
 	#$sm->logObj($log_obj);
 	#$sm->verboseLevel($debug);
-$sm->msg( $args{body} );
+#$sm->msg( $args{body} );
 
 	$sm->hostName(`hostname`);
 	
