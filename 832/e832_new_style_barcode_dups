@@ -30,10 +30,7 @@ flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
-#TODO, delete next two lines , unomment after that
-my $g_emails;
-$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
-#my $g_emails = $g_cfg->e832->{programmer_emails};
+my $g_emails = $g_cfg->e832->{programmer_emails};
 
 #- Global variables --------------------------------------------------
 my $g_verbose = 0;
@@ -79,8 +76,6 @@ sub fatal_error {
 # Pseudo Main which is called from MAIN
 #---------------------------------------------------------------------
 sub my_main {
-    #TODO remove next line
-    my $x=1/0;
     my $sub = __FILE__ . " the_main";
     if ($g_verbose) {
 
