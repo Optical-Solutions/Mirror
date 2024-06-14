@@ -1,0 +1,465 @@
+#!/usr/bin/perl
+#---------------------------------------------------------------------
+# Program    : rdc_rms_daily_inv_var_rep
+# Author     : Hanny Januarius
+# Created    : Tue Feb  2 09:07:07 EST 2016
+# Description: Generate report post inventory snapshot
+#              This storable report will be read by IBIS.
+# changed    : March 22, 17. Program renamed for the  changed process for HJ. yuc
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use Getopt::Std;
+use DateTime;
+use Storable;
+use IBIS::ExcelWriter::File;
+use MIME::Entity;
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Get option switches -----------------------------------------------
+our %g_opt = ( d => 0 );
+getopts( 'd', \%g_opt );
+my $DEBUG = $g_opt{d};
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+
+my $g_email        = $g_cfg->rdc_rms_rep->{email};
+my $g_report_email = $g_cfg->rdc_rms_rep->{report_email};
+my $g_dbname       = $g_cfg->rdc_rms_rep->{dbname};
+my $g_data_dir     = $g_cfg->rdc_rms_rep->{data_dir};
+my $g_xlsx_dir     = $g_cfg->rdc_rms_rep->{xlsx_dir};
+
+unless ( -d $g_data_dir ) {
+    mkpath($g_data_dir);
+}
+
+print Dumper $g_dbname if $DEBUG;
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+Readonly my $g_logfile => '/usr/local/mccs/log/' . basename(__FILE__) . '.log';
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`;
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+my $g_dbh = IBIS::DBI->connect( dbname => $g_dbname )
+  or fatal_error("Cannot connect to RAMS database $g_dbname");
+my $g_yyyymmdd = `date +"%Y%m%d"`;
+chomp($g_yyyymmdd);
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main2() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail_with_attachment {
+    my $body = shift;
+    my $file = shift;
+    my $rdc  = shift;
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    my @emails = values( %{$g_report_email} );
+    $g_log->info("Sending attachment to:");
+    foreach my $e ( sort keys %{$g_report_email} ) {
+        $g_log->info(" $e ($g_report_email->{$e})");
+    }
+
+    $g_log->info("mail_report");
+
+    my $subject;
+    if($rdc){
+	$subject = "RDC RMS INVENTORY VARIANCE REPORT FOR $g_yyyymmdd OF $rdc ";
+    }else{
+	$subject = "NO INVENTORY VARIANCE for ".$rdc." on ".$g_yyyymmdd;
+
+    }
+    $g_log->info(" Subject: $subject");
+    $g_log->info(" Attachment: $file") if $file;
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($subject);
+    $go_mail->sendTo($g_report_email);
+    $go_mail->attachments($file) if $file;
+    $go_mail->msg($body);
+    $go_mail->hostName($g_host);
+    if ($file) {
+        $go_mail->send_mail_attachment();
+    }
+    else {
+        $go_mail->send_mail();
+    }
+}
+
+#---------------------------------------------------------------------
+
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body     = ( $msg_bod1, $msg_bod2 );
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_email);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+sub create_excel {
+    my $data = shift;
+    my $rdc  = shift;
+
+    my $boldnoborder     = 'string,bold,align:center';
+    my $boldcenter       = 'string,bold,align:center,border';
+    my $boldcenterblue   = 'string,bold,align:center,bgcolor:blue,color:white,border';
+    my $boldcentergreen  = 'string,bold,align:center,bgcolor:green,color:white,border';
+    my $boldcenteryellow = 'string,bold,align:center,bgcolor:yellow,color:black,border';
+    my $strbluebg        = 'string,align:right,bgcolor:blue,color:white';
+    my $strgreenbg       = 'string,align:right,bgcolor:green,color:white';
+    my $stryellowbg      = 'string,align:right,bgcolor:yellow,color:black';
+    my $strredbg         = 'string,align:center,italic,color:red';
+    my $strcenter        = 'string,align:center';
+    my $numcenter        = 'number,align:center';
+    my $str              = 'string,align:left';
+    my $money            = 'number,accuracy:2,align:right';
+
+    my @csv   = ();
+    my $count = scalar( keys %{$data} );
+
+    if ( scalar( keys %{$data} ) ) {
+        $g_log->info("Creating excel $count records.");
+        push(
+            @csv,
+            [
+                { 'RDC SITE'                   => $boldcenter },
+                { 'RMS SKU'                    => $boldcenter },
+                { 'RMS STYLE'                  => $boldcenter },
+                { 'RMS COLOR'                  => $boldcenter },
+                { 'RMS SIZE'                   => $boldcenter },
+                { 'RMS DIM'                    => $boldcenter },
+                { 'LANDAIR SKU'                  => $boldcenter },
+	        { 'LANDAIR STATUS'                  => $boldcenter },
+    #            { 'NFI COLOR'                  => $boldcenter },
+    #            { 'NFI SIZE'                   => $boldcenter },
+    #            { 'NFI DIM'                    => $boldcenter },
+                { 'RMS QTY ONHAND'             => $boldcenter },
+                { 'LANDAIR QTY ONHAND'         => $boldcenter },
+                { 'Q VARIANCE'                 => $boldcenter },
+                { 'H VARIANCE'                 => $boldcenter },
+	        { 'QTY_RTV'                    => $boldcenter },
+                { 'VARIANCE REASON'            => $boldcenter },
+    #            { 'PRIOR VARIANCE'             => $boldcenter },
+                { 'COMMENTS'               => $boldcenter }
+    ##            { 'LANDAIR COMMENTS'               => $boldcenter },
+    ##            { 'ROOT CAUSE'                 => $boldcenter },
+    ##            { 'LONG TERM PREVENTATIVE FIX' => $boldcenter }
+            ]
+        );
+        foreach my $e ( sort keys %{$data} ) {
+        my ($z_sku, $i_sku, $z_site, $i_status, $i_qty) = split(/\|/,$e);
+            push(
+                @csv,
+                [
+                    { $data->{$e}->{r_site_id}       => $strcenter },
+                   # { $e                             => $strcenter },
+                    { $z_sku                         => $strcenter },
+                    { $data->{$e}->{r_style_id}      => $strcenter },
+                    { $data->{$e}->{r_color_id}      => $strcenter },
+                    { $data->{$e}->{r_size_id}       => $strcenter },
+                    { $data->{$e}->{r_dimension_id}  => $strcenter },
+		    { $i_sku                         => $strcenter },
+		    { $data->{$e}->{i_status}        => $strcenter },
+    #                { $data->{$e}->{i_sku}           => $strcenter },
+    #                { $data->{$e}->{i_color_id}      => $strcenter },
+    #                { $data->{$e}->{i_size_id}       => $strcenter },
+    #                { $data->{$e}->{i_dimension_id}  => $strcenter },
+                    { $data->{$e}->{r_qty_on_hand}   => $strcenter },
+                    { $data->{$e}->{i_qty}           => $strcenter },
+                    { $data->{$e}->{ri_qty_variance} => $strcenter },
+		    { $data->{$e}->{ri_hld_variance} => $strcenter },
+		    { $data->{$e}->{qty_rtv}         => $strcenter },
+                    { $data->{$e}->{variance_reason} => $strcenter }
+                ]
+            );
+        }
+        my $filename = 'RDC_RMS_INV_VARIANCE_' . $rdc. "_" . $g_yyyymmdd . '.xlsx';
+        my $o        = IBIS::ExcelWriter::File->write(
+            outdir   => $g_xlsx_dir,
+            file     => $filename,
+            csv_data => \@csv
+        );
+        return "$g_xlsx_dir/$filename";
+    }
+    else {
+        return 0;
+    }
+}
+
+#---------------------------------------------------------------------
+sub check_file {
+    my $ret = 0;
+    my $sql = <<END;
+select distinct host_group_id
+from wms_hj_snap_shot
+END
+    $g_log->info("Prepare\n$sql");
+    my $sth = $g_dbh->prepare($sql) or fatal_error("Could not prepare SQL.");
+
+    $g_log->info("Execute.");
+    $sth->execute();
+    my $n = 0;
+    $g_log->info("Source File:");
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        $g_log->info( "  " . $row->{host_group_id} );
+        $n++;
+    }
+
+#No more 60001
+#    if ( $n >= 2 ) {
+    if ( $n >= 1 ) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+###-----------------------------------------------
+## check rdc and related site_ids ----------------
+###-----------------------------------------------
+
+#---------------------------------------------------------------------
+sub get_rdc_info {
+    my $ret = 0;
+    my $ret_ref;
+### we know that only one unique host_group_id and site_id at this point in the invent process
+    my $sql = <<END;
+select distinct host_group_id, site_id
+from wms_hj_snap_shot
+END
+    $g_log->info("Prepare\n$sql");
+    my $sth = $g_dbh->prepare($sql) or fatal_error("Could not prepare SQL.");
+    $g_log->info("Execute.");
+    $sth->execute();
+    $g_log->info("Source File:");
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        $g_log->info( "host_group_id: " . $row->{host_group_id} );
+	$g_log->info( "site_id: " . $row->{site_id} );
+
+	$ret_ref->{ $row->{host_group_id} } = $row->{site_id};
+    }
+    return $ret_ref;
+}
+
+
+
+#---------------------------------------------------------------------
+## under the assumption that only one of the RDC will be true. not both
+sub which_rdc{
+    my ($rc6, $rc7) = @_;
+    my $rdc = '';
+    if($rc6 > 0){
+	$rdc ='60001';
+    }elsif($rc7 > 0){
+	$rdc ='70001';
+    }else{
+        $rdc ='unknown';
+    }
+    return $rdc;
+}
+#---------------------------------------------------------------------
+sub my_main2 {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+    ###return 1;
+    my $file_available = check_file();
+    my $rdc_info = &get_rdc_info();
+
+    if ($file_available) {
+
+   for my $hg_id (keys %$rdc_info){
+    unless($hg_id){
+	next;
+    }
+       my $sth = &get_invent_sth($hg_id);
+
+
+        my $storable_filename = $g_data_dir . '/' . 'RDC_RMS_INV_VARIANCE_' . $g_yyyymmdd . '.sto';
+        my %data              = ();
+        my $c6                = 0;
+        my $c7                = 0;
+        while ( my $r = $sth->fetchrow_hashref ) {
+	    $data{ $r->{sku} .'|'. $r->{i_sku}.'|'.$r->{r_site_id}.'|'.$r->{i_status}.'|'.$r->{qty} } = $r;
+            $c6++ if ( $r->{r_site_id} eq '60001' );
+            $c7++ if ( $r->{r_site_id} eq '70001' );
+        }
+        my $a = scalar keys %data;
+        $g_log->info("Storable data: $a record count");
+        $g_log->info($storable_filename);
+	## my $rdc = &which_rdc($c6, $c7);
+         
+        my $rdc = $rdc_info->{$hg_id};
+        my $excel_file = create_excel( \%data, $rdc);
+
+     ## get only the basename, (leaf name) of the file
+        my $base       = basename($excel_file);
+        store \%data, $storable_filename;
+
+	my $body;
+        if ( $c6 > 0 ) {
+
+            $body = <<ENDBODY;
+RDC RMS INVENTORY VARIANCE 60001
+
+Site 60001 rec count = $c6
+
+Detail can be view on attachment 
+$base 
+ENDBODY
+
+            send_mail_with_attachment( $body, $excel_file, '60001');
+
+        }elsif ($c7 > 0){
+
+            $body = <<ENDBODY;
+RDC RMS INVENTORY VARIANCE 70001
+
+Site 70001 rec count = $c7
+
+Detail can be view on attachment 
+$base 
+ENDBODY
+            send_mail_with_attachment($body, $excel_file, '70001' );
+        }else {
+        $g_log->info("");
+      my $body = qq(NO INVENTORY VARIANCE for site: $rdc );
+         $g_log->info("$body");
+         ## use MCCS::WMS::Sendmail;
+         send_mail_with_attachment($body, '',  $rdc);
+        }
+   }
+    }else {
+        $g_log->info("File not available, BAIL OUT.");
+    }
+    ## rdc_info loop 
+    $g_log->info("-- End ------------------------------------------");
+}
+
+
+sub get_invent_sth{
+my ($host_group_id) = @_;
+
+unless($host_group_id){
+    return undef;
+}
+
+my @binding_val;
+push(@binding_val, $host_group_id);    
+
+        my $sql = <<ENDSQL;
+     select R_site_id, 
+       nvl(r_style_id,i_style_id)
+           ||nvl(r_color_id,i_color_id)
+           ||nvl(r_size_id,i_size_id)
+           ||nvl(r_dimension_id,i_dimension_id) SKU, 
+       R_STYLE_ID,
+       R_COLOR_ID,
+       R_SIZE_ID,
+       R_DIMENSION_ID,
+       REPLACE(I_SKU,'*', '') as I_SKU,
+       I_STYLE_ID,
+       I_COLOR_ID,
+       I_SIZE_ID,
+       I_DIMENSION_ID,
+       R_QTY_on_hand,
+       I_QTY,
+       I_STATUS,
+       RI_QTY_VARIANCE,
+       RI_HLD_VARIANCE,
+       qty_rtv,
+       case  
+               when  variance_type = 'I' then 'Item Not In RMS'
+               when variance_type = 'QV' then 'Quantity Difference'
+	       when variance_type = 'QE' then 'Qty_on_hand equal'
+               when variance_type = 'HV' then 'Qty_on_hold Difference'
+	       when variance_type = 'HE' then 'Qty_on_hold equal'
+               when  variance_type = 'R' then 'Item Not in HJ'
+       END  "variance_reason",
+       null "prior_variance",
+       null "mcx_comments",
+       null "nfi_comments",
+       null "root_cause",
+       null "long_term_preventative_fix"
+from HJ_WMS_TOT_HJI_RMS_VARIPLUS_V
+where r_site_id in ('60001','70001')
+and host_group_id = ?
+order by 1,2
+ENDSQL
+
+## the restrictions on R type will be removed before going into production. yuc
+### ==============><<<<<<<<<<<<<<<<<<<
+        $g_log->info("Prepare\n$sql");
+        my $sth = $g_dbh->prepare($sql) or fatal_error("Could not prepare SQL.");
+
+        $g_log->info("Execute.");
+        $sth->execute(@binding_val);
+
+### get $sth
+	return $sth;
+
+}
