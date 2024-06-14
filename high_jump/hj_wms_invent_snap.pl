@@ -100,17 +100,17 @@ sub run_report_on_variance_tab {
 
     if ( $ret_val->[0][0] < 0.15 ) { ## if the last job is less than 15 mins old, do report.
 	
-	my $cmd = '/usr/local/mccs/perl/bin/perl /usr/local/mccs/bin/high_jump/hj_rms_daily_inv_var_rep';
-	
-	eval{
-	    system($cmd);
-	};
+        my $cmd = '/usr/local/mccs/perl/bin/perl /usr/local/mccs/bin/high_jump/hj_rms_daily_inv_var_rep';
+        
+        eval{
+            system($cmd);
+        };
 
-	if($@){
-	    my $msg = "Error happened in running: /usr/local/mccs/perl/bin/perl /usr/local/mccs/bin/high_jump/hj_rms_daily_inv_var_rep";
-	    $wms->{'log_obj'}->info($msg);
-	    die;
-	}
+        if($@){
+            my $msg = "Error happened in running: /usr/local/mccs/perl/bin/perl /usr/local/mccs/bin/high_jump/hj_rms_daily_inv_var_rep";
+            $wms->{'log_obj'}->info($msg);
+            die;
+        }
     }
 }
 
