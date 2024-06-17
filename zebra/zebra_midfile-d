@@ -1,0 +1,344 @@
+#!/usr/local/mccs/perl/bin/perl
+#--------------------------------------------------------------------
+# Name:	    zebra_midfile-d
+# Author:   Hanny Januarius
+# Desc:     put files accordingly, data driven.
+#           Please see ibiscfg.xml for the dir, user, pwd, etc
+#           Each sftp put will have its own process.
+#
+# Created:  Tue Jan 11 09:06:40 EST 2022
+#
+# Ported by: Hanny Januarius
+# Date	   : Thu Nov 30 11:40:49 EST 2023
+#--------------------------------------------------------------------
+use strict;
+use warnings;
+use Net::SFTP::Foreign;
+use File::Path;
+use File::Basename;
+use File::Copy;
+use MCCS::File::Util qw(move_to_archive);
+use IBIS::Log::File;
+use MCCS::Utils qw(is_rdiusr);
+use Fcntl qw(:flock);
+use MCCS::Config;
+use Getopt::Std;
+use IBIS::DBI;
+use Data::Dumper;
+
+$| = 1;
+unless ( is_rdiusr() ) {
+   print "Must run $0 as rdiusr\n";
+   exit 1;    # Exit for error
+}
+
+#- One process at a time --------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . "$$.lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+unless ( flock SELF, LOCK_EX | LOCK_NB ) {
+   print "Another $0 process is already running.\n";
+   print "Exit.\n";
+   exit(1);
+}
+
+# Switches
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+our %opts = ( d => 0 );
+getopts( "d", \%opts );
+
+my $g_cfg    = new MCCS::Config;
+my $rms_dbname = $g_cfg->ibis_physical_inventory->{DB_NAME};
+my $g_emails = $g_cfg->sftp_put_daemon->{emails};
+
+my $g_verbose     = $opts{d};
+my $g_enable_mail = 1;
+my $g_host        = `hostname`;
+chomp($g_host);
+my $g_ibis_dbh = IBIS::DBI->connect( dbname => 'ibisora' );
+
+my $mmddyyyy = `date "+%m%d%Y"`;
+chomp($mmddyyyy);
+
+# Get username and email addrs
+#-----------------------------
+my $sql = <<ENDSQL;
+select username, email 
+from dba_users
+where 
+email like '%@%' 
+and status = 'UNLOCKED'
+ENDSQL
+
+my $g_user_email = {};
+my $sth          = $g_ibis_dbh->prepare($sql);
+$sth->execute();
+while ( my $zz = $sth->fetchrow_hashref() ) {
+   if ( defined( $zz->{username} ) ) {
+      if ( defined( $zz->{email} ) ) {
+         $g_user_email->{ $zz->{username} } = $zz->{email};
+      }
+   }
+} ## end while ( my $zz = $sth->fetchrow_hashref...)
+$g_ibis_dbh->disconnect;
+
+my $ff          = basename( $ARGV[0] );
+my $g_prog_name = basename(__FILE__);
+my $nano = `date "+%N"`;
+chomp($nano);
+my $log_name    = $g_prog_name ."_". $$ . ".log";
+
+my $log_d       = "/usr/local/mccs/log/zebra/zebra_midfile-daemon";
+
+unless ( -d $log_d ) { mkpath($log_d); }
+
+my $g_log = IBIS::Log::File->new( { file => "$log_d/$log_name", append => 1, level => 4 } );
+
+#--------------------------------------------------------------------------------
+
+sub p_log { $g_log->info( $$ . " " . "@_" ); }
+
+#--------------------------------------------------------------------------------
+sub send_mail {
+   my $user     = shift;
+   my $msg_sub  = shift;
+   my $msg_bod1 = shift;
+   my $msg_bod2 = shift || '';
+   my $err_msg  = "";
+   my $miss_user;
+
+   $user =~ s/\d//g;   # take out digits from username ... in case process ID passed there.
+
+   if ( defined( $g_user_email->{$user} ) ) {
+      p_log("User $user email confirmed.");
+   }
+   else {
+      $user = 'rdiusr';
+      $g_user_email->{$user} =  'rdistaff@usmc-mccs.org';
+
+   } ## end else [ if ( defined( $g_user_email...))]
+
+   p_log( "Sent email to $user (" . $g_user_email->{$user} . ") Sbj: $msg_sub " );
+
+   #$msg_bod1 =~ s/\n+/\n/g;
+   #$msg_bod2 =~ s/\n+/\n/g;
+
+   if ($g_enable_mail) {
+      open( MAIL, "|/usr/sbin/sendmail -t" );
+      print MAIL "To: " . $g_user_email->{$user} . " \n";
+      print MAIL "From: rdistaff\@usmc-mccs.org\n";
+      print MAIL "Cc: " . $g_emails->{RDI} . " \n";
+      print MAIL "Subject: $msg_sub \n";
+      print MAIL $err_msg;
+      print MAIL "\n";
+      print MAIL "\n";
+      print MAIL $msg_bod1;
+      print MAIL "\n";
+      print MAIL "\n";
+      print MAIL $msg_bod2;
+      print MAIL "\n";
+      print MAIL "\n";
+      print MAIL "Server: $g_host\n";
+      print MAIL "Program: /usr/local/mccs/bin/" . basename($0) . "\n";
+      print MAIL "\n";
+      print MAIL "\n";
+      close(MAIL);
+   } ## end if ($g_enable_mail)
+
+} ## end sub send_mail
+
+#--------------------------------------------------------------------------------
+sub fatal_error {
+   my $msg  = shift;
+   my $msg2 = shift || "";
+   my $user = shift || "rdiusr";
+
+   send_mail( $user, "ERROR on $g_prog_name pid[$$]", $msg, $msg2 );
+
+   exit;
+} ## end sub fatal_error
+
+#--------------------------------------------------------------------------------
+sub make_midfile_barcode_file {
+   my $user      = shift;
+   my $site      = shift;
+   my $rms_r_dbh = IBIS::DBI->connect( dbname => 'rms_r' );
+   my $sql       = <<END;
+SELECT
+    s.business_unit_id,
+    b.bar_code_id,
+    b.color_id,
+    b.dimension_id,
+    b.size_id,
+    s.description,
+    get_permanent_retail_price('30', '$site', b.style_id, b.color_id, b.dimension_id,
+                               b.size_id, sysdate, NULL) corp_retail,
+    v.lob_id,
+    v.department_id,
+    v.class_id,
+    v.dept_name,
+    v.class_descr,
+    v.sub_class_descr,
+    (
+        select distinct Description
+        from   MERCHANDISING_LEVELS ml
+        where  MLVL_LEVEL_ID is not null
+        and    ml.level_id = v.lob_id
+    ) lob_desc
+FROM
+    styles                  s,
+    bar_codes               b,
+    v_dept_class_subclass2  v
+WHERE
+        s.business_unit_id = '30'
+    AND s.business_unit_id = b.business_unit_id
+    AND s.business_unit_id = v.business_unit_id
+    AND s.style_id = b.style_id
+    AND s.section_id = v.section_id
+    AND ( b.expiry_date > sysdate OR b.expiry_date IS NULL )
+    --  and    b.bar_code_id in( '014056116028','014056115762','627960205001') 
+END
+
+   my $sth = $rms_r_dbh->prepare($sql);
+
+   my $f        = "/usr/local/mccs/data/physical_inventory_zebra/source/MidFile_MCX_" . $site . "_" . $mmddyyyy . "_" . $$ . ".csv";
+   my $basename = basename($f);
+
+   open( OUT, ">$f" ) or fatal_error( "Could not write $f due to $!", $user );
+
+   $sth->execute;
+   my @data= ();
+   my $n = 0;
+   while ( my $row = $sth->fetchrow_hashref ) {
+      $n++;
+      unless( defined($row->{dimension_id} ) ) { $row->{dimension_id} = ""; }
+      unless( defined($row->{size_id}) ) { $row->{size_id} = ""; }     
+      unless( defined($row->{description}) ) { $row->{description} = ""; }     
+      unless( defined($row->{lob_id}) ) { $row->{lob_id} = ""; }     
+
+      my $tmp = substr( $row->{description}, 0, 30 );
+      $tmp =~ s/"/ /g;
+      $row->{description} = $tmp;
+
+      my $line = sprintf(
+                        "30%-20s%3s%-5s%-5s%-30s%11.2f%4s%-40s%4s%-40s%4s%-40s\n",
+                        $row->{bar_code_id},
+                        $row->{color_id},
+                        $row->{dimension_id},
+                        $row->{size_id},
+                        $tmp, 
+                        $row->{corp_retail},
+                        $row->{lob_id},
+                        $row->{lob_desc},
+                        $row->{department_id},
+                        $row->{dept_name},
+                        $row->{class_id},
+                        $row->{class_descr}
+                 );
+      print OUT $line;
+
+      push(@data, $row);
+
+   } ## end while ( my $row = $sth->fetchrow_hashref)
+
+   close OUT;
+
+   my $filesize = -s $f;
+   p_log("Record count $n");
+   p_log("Filename = $basename ");
+   p_log("Filesize = $filesize ");
+
+   send_mail( $user,
+              "Completed Generating ZEBRA site $site midfile barcode file PID $$",
+              "File $basename created $filesize bytes.",
+              "Please check IBIS page.\n\nThanks\nIBIS" );
+
+   $rms_r_dbh->disconnect;
+
+   # Per Mike T, we dont need to archive the record to table 08/25/22
+   #
+   # my $db = IBIS::Zebra::DB_Util->new(dbname=>$rms_dbname, jobid=>$$, logfile=>"/usr/local/mccs/log/$log_name");
+   # p_log("Populate zebra_master_file table START");
+   # $db->insert_mid_record(\@data);
+   # p_log("Populate zebra_master_file table DONE");
+
+} ## end sub make_midfile_barcode_file
+
+#--------------------------------------------------------------------------------
+sub transfer_file {
+   my $file = shift;
+   my $user = shift;
+
+   $g_log->info("fileparse $file ");
+   my ( $name, $path, $suffix ) = fileparse($file);
+
+   my $done_dir = $path . "done";
+
+   unless ( -d $done_dir ) {
+      mkpath($done_dir) or fatal_error( "Could not create directory $done_dir", $! );
+   }
+
+   mkpath($done_dir) unless -d $done_dir;
+
+   my $app;
+
+   # Find what site to make the midfile
+   open( IN, $file ) or fatal_error("Could not read $file $!");
+   my $site = <IN>;
+   $site =~ s/\s//g;
+   close IN;
+
+   my $base = basename($file);
+   $base =~ s/\s//g;
+   $base =~ s/\.\w+$//g;
+
+   p_log("Start ----------------------- $$");
+
+   if ( -e $file ) {
+
+      my $msg = <<END;
+$user,
+
+please wait for 20 minutes.
+RMS will generate MIDFILE barcode file for site $site.
+
+
+Thanks
+
+IBIS.
+
+END
+      send_mail( $user, "Started Generating ZEBRA site $site midfile barcode file PID $$", $msg );
+      my $b         = basename($file);
+      my $file_size = -s $file;
+
+      move_to_archive( { file => $file, dir => $done_dir } ) or fatal_error( "could not move $file to $done_dir", $! );
+
+      p_log("making barcode midfile file for $user");
+
+      make_midfile_barcode_file( $user, $site );
+
+   } ## end if ( -e $file )
+   else {
+      fatal_error("Missing file $file");
+   }
+
+   p_log("End ------------------------- $$");
+
+} ## end sub transfer_file
+
+#--------------------------------------------------------------------------------
+# Main
+#--------------------------------------------------------------------------------
+my $f = $ARGV[0];    #First argument
+
+if ( -e $f ) {
+   p_log($f);
+   p_log("Args[0] = $ff");
+   my $g_user = basename($f) || 'rdiusr';
+   transfer_file( $f, $g_user );
+} else {
+	fatal_error("Trigger file $f missing")
+}
+
+#--------------------------------------------------------------------------------
+

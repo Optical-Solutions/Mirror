@@ -1,0 +1,282 @@
+#!/usr/local/mccs/perl/bin/perl
+#--------------------------------------------------------------------
+# Name:	    zebra_midfile-daemon
+# Author:   Hanny Januarius
+# Desc:     build zebra mid file
+#           Each sftp put will have its own process.
+#
+#           calling /usr/local/mccs/bin/zebra_midfile-d <file>
+#
+# Created:  Tue Jan 25 15:06:40 EST 2022
+#
+# Ported by: Hanny Januarius
+# Date:      Thu Nov 30 11:42:05 EST 2023
+# 
+#--------------------------------------------------------------------
+use strict;
+use warnings;
+use File::Path;
+use File::Basename;
+use File::Copy;
+use IBIS::Log::File;
+use MCCS::Utils qw(is_rdiusr);
+use Fcntl qw(:flock);
+use MCCS::Config;
+use Getopt::Std;
+use IBIS::DBI;
+use Data::Dumper;
+
+
+$| = 1;
+unless ( is_rdiusr() ) {
+    print "Must run $0 as rdiusr\n";
+    exit 1;    # Exit for error
+}
+
+#- One process at a time --------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+unless ( flock SELF, LOCK_EX | LOCK_NB ) {
+    print "Another $0 process is already running.\n";
+    print "Exit.\n";
+    exit(1);
+}
+
+# Switches
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+our %opts = ( d => 0 );
+getopts( "d", \%opts );
+
+my $g_cfg         = new MCCS::Config;
+my $g_emails      = $g_cfg->sftp_put_daemon->{emails};
+
+my $g_verbose     = $opts{d};
+my $g_enable_mail = 1;
+my $g_host        = `hostname`;
+chomp($g_host);
+my $g_ibis_dbh = IBIS::DBI->connect( dbname => 'ibisora' );
+
+# Get username and email addrs
+#-----------------------------
+my $sql = <<ENDSQL;
+select username, email 
+from dba_users
+where 
+email like '%@%' 
+and status = 'UNLOCKED'
+ENDSQL
+
+my $g_user_email  = {};
+my $sth          = $g_ibis_dbh->prepare($sql);
+$sth->execute();
+while ( my $zz = $sth->fetchrow_hashref() ) {
+    if ( defined($zz->{username}) ) {
+      if ( defined($zz->{email}) ) {
+        $g_user_email->{ $zz->{username} } = $zz->{email};
+      }
+    }
+}
+
+
+# Being paranoid here, chdir.
+# Well behaved daemon chdir to root so it deos not prevent unmounting
+# the filesystem containing the directory from which it was launched.
+chdir("/") or die "Could not chroot to root";
+
+# Data daemon
+my $ddir = '/usr/local/mccs/data/zebra/daemon';
+
+my $prog_name = basename(__FILE__);
+my $g_log = IBIS::Log::File->new( { file => "/usr/local/mccs/log/zebra/$prog_name.log", append => 1, level => 4 } );
+
+my $pid = fork;  # FORK here
+exit if $pid;    # Out, you are parent.
+
+die "Could not fork: $!" unless defined($pid);
+
+# Detached processes
+#-------------------
+use POSIX qw(setsid);
+setsid() or die "Can't start a new session: $!";
+
+my $time_to_die = 0;
+
+#--------------------------------------------------------------------------------
+sub p_log { $g_log->info( $$ . " " . "@_" ); }
+#--------------------------------------------------------------------------------
+
+$SIG{HUP}  = sub { p_log("Caught SIGHUP:  exiting gracefully"); $time_to_die = 1; };
+$SIG{INT}  = sub { p_log("Caught SIGINT:  exiting gracefully"); $time_to_die = 1; };
+$SIG{QUIT} = sub { p_log("Caught SIGQUIT: exiting gracefully"); $time_to_die = 1; };
+$SIG{TERM} = sub { p_log("Caught SIGTERM: exiting gracefully"); $time_to_die = 1; };
+
+#--------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------
+sub send_mail {
+    my $user     = shift;
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my $err_msg  = "";
+    my $miss_user;
+
+    if ( defined( $g_user_email->{$user} ) ) {
+        p_log("User $user email confirmed.");
+    }
+    else {
+        p_log("I could not find email for $user.");
+        p_log("Defaulted to rdiusr.");
+        $miss_user = $user;
+        $err_msg .= "I could not find email for user $miss_user.";
+        $err_msg .= "Please check IBIS account for user $miss_user.";
+        $user = 'rdiusr';
+    }
+    p_log( "Sent email to $user (" . $g_user_email->{$user} . ") Sbj: $msg_sub ");
+
+    #$msg_bod1 =~ s/\n+/\n/g;
+    #$msg_bod2 =~ s/\n+/\n/g;
+
+    if ($g_enable_mail) {
+        open( MAIL, "|/usr/sbin/sendmail -t" );
+        print MAIL "To: " . $g_user_email->{$user} . " \n";
+        print MAIL "From: rdistaff\@usmc-mccs.org\n";
+        print MAIL "Cc: " . $g_emails->{RDI} . " \n";
+        print MAIL "Subject: $msg_sub pid=$$\n";
+        print MAIL $err_msg;
+        print MAIL "\n";
+        print MAIL "\n";
+        print MAIL $msg_bod1;
+        print MAIL "\n";
+        print MAIL "\n";
+        print MAIL $msg_bod2;
+        print MAIL "\n";
+        print MAIL "\n";
+        print MAIL "Server: $g_host\n";
+        print MAIL "Daemon: " . basename($0) . "\n";
+        print MAIL "\n";
+        print MAIL "\n";
+        close(MAIL);
+    }
+
+}
+#--------------------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    my $msg2 = shift || "";
+
+    send_mail('hjanuarius', "ERROR on Daemon $prog_name PID $$", $msg, $msg2);
+    
+    exit;
+}
+#--------------------------------------------------------------------------------
+sub get_directory {
+    my $dir   = shift;
+    my @list = ();
+
+    unless ( -d $dir ) {
+        p_log("Bad directory $dir, could not find files!");
+        return \@list;    # return empty files
+    }
+    my $dh;
+    
+    opendir( $dh, $dir );
+
+    while (defined(my $name = readdir $dh)) {
+      next unless -d "$dir/$name";
+      next if $name eq '..';
+      next if $name eq '.';
+      push(@list, "$dir/$name") if  -d "$dir/$name";
+    }
+    closedir($dh);
+
+    return \@list;
+}
+#--------------------------------------------------------------------------------
+sub get_file_list {
+    my $dir   = shift;
+    my @list = ();
+
+    unless ( -d $dir ) {
+        p_log("Bad directory $dir, could not find files!");
+        return \@list;    # return empty files
+    }
+    
+    
+    my $dh;
+    opendir( $dh, $dir );
+
+    while (defined(my $name = readdir $dh)) {
+      next if -d "$dir/$name";
+      next if $name eq '..';
+      next if $name eq '.';
+      push(@list, "$dir/$name" ) if -f "$dir/$name";
+    }
+    closedir($dh);
+
+    return \@list;
+}
+
+#--------------------------------------------------------------------------------
+sub transfer_file {
+
+    #--------------------------------------
+    # Let's ignore dead child processes.
+    # Set this before forking, duh!
+    #
+    $SIG{CHLD} = 'IGNORE';
+    #--------------------------------------
+
+    my $pid = fork;
+    die "Could not fork: $!" unless defined($pid);
+
+
+    if ($pid) {
+        #--------------------------------------
+        # You are PARENT
+        # return to main block
+        # and move the file to done
+        #--------------------------------------
+       
+        # $p_log("parent pid = $pid");
+      
+    } else {
+        #---------------------------------------------
+        #
+        # You are a CHILD process
+        # Go do something time-consuming
+        #
+        #---------------------------------------------
+        p_log("Start ------------------------- $$");
+        my $cmd = "/usr/local/mccs/bin/zebra_midfile-d_serial"; 
+        p_log("backtick = $cmd");
+        my $msg = `$cmd`;
+        p_log($msg);
+        p_log("End ------------------------- $$");
+        exit;   # MUST EXIT HERE!
+   }
+}
+    
+
+#--------------------------------------------------------------------------------
+# Main
+#--------------------------------------------------------------------------------
+
+my $zlog_dir = "/usr/local/mccs/log/$prog_name";
+unless(-d $zlog_dir) { mkpath($zlog_dir); }
+
+my @files;
+my $source_d = "/usr/local/mccs/data/physical_inventory_zebra/midfile_daemon_trigger";
+
+until ($time_to_die) {
+
+    @files = ();
+    push(@files, @{get_file_list($source_d)});	
+
+    if( @{files} ) {
+       transfer_file(); # this bit fork!  
+    }
+    
+    sleep 30 ; # Wait a minute before cycling again, we are not in a rush 
+
+}
+#--------------------------------------------------------------------------------

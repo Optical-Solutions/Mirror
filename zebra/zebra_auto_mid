@@ -1,0 +1,221 @@
+#!/usr/local/mccs/perl/bin/perl
+#---------------------------------------------------------------------
+# Program    : zebra_auto_mid
+# Author     : Hanny Januarius
+# Created    : Wed Nov 16 14:43:46 EST 2022
+# Description: to be run daily on cron, once a day
+#              this will generate site specific midfile .csv
+# Modification:
+#  - Thu Jun 22 14:32:10 EDT 2023
+#  - Per Mike Thomas, The process today automatically sends a Mid file 
+#    to each store 3 days prior to their physical inventory date setup in RMS. 
+#    Mike has asked that we change that to send 4 days prior to their 
+#    physical inventory date. 
+#
+# Ported by  : Hanny Januarius
+# Date       : Thu Nov 30 11:35:38 EST 2023
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use Getopt::Std;
+use DateTime;
+use List::MoreUtils qw(uniq);
+
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Get option switches -----------------------------------------------
+our %g_opt = (
+    d => 0
+);
+getopts('d', \%g_opt);
+my $DEBUG = $g_opt{d};
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+
+my $g_emails = $g_cfg->zebra->{emails};  #TODO
+
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+$g_verbose = 1 if $DEBUG;
+Readonly my $g_logfile => '/usr/local/mccs/log/zebra/' . basename(__FILE__) . '.log';
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`; 
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+my $g_rms_dbh = IBIS::DBI->connect( dbname => 'rms_p' );
+my $g_trigger_dir = $g_cfg->zebra->{midfile_trigger_dir};
+   #$g_trigger_dir = '/usr/local/mccs/data/tmp';
+my @g_sites = ();
+print Dumper $g_cfg->zebra if $DEBUG;
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body = ($msg_bod1, $msg_bod2);
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_emails);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub p_log {
+    $g_log->info(@_);
+} 
+#---------------------------------------------------------------------
+sub p_dbg {
+    $g_log->debug(@_);
+} 
+#---------------------------------------------------------------------
+sub create_trigger_file {
+    my $site = shift;
+    my $nano = `date +"%M%N"`; # min and nanoseconds
+    chomp($nano);
+    my $filename = $g_trigger_dir . '/rdiusr_'. $nano;
+    p_log($site .' '. $filename);
+
+    open(OUT, '>', $filename) or fatal_error("Could not write $filename because $!");
+    print OUT $site;
+    close OUT;
+}
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+sub get_listing {
+   my $sql       = <<END;
+SELECT
+    p.document_id,
+    pis.site_id,
+    (
+        SELECT name
+        FROM sites s
+        WHERE business_unit_id = 30 AND s.site_id = pis.site_id
+    )
+    name,
+    p.description,
+    pis.count_am_pm,
+    to_char(p.inventory_date, 'yyyy/mm/dd')          inventory_date,
+    to_char(p.freeze_date, 'yyyy/mm/dd')             freeze_date,
+    to_char(p.inventory_date - 3,'yyyy/mm/dd')  send_barcode_file_date,
+    pis.status pstatus,
+    CASE
+        WHEN pis.status = 4    THEN 'Count Entry'
+        WHEN pis.status = 6    THEN 'Updated'
+        WHEN pis.status = 3    THEN 'Frozen'
+        WHEN pis.status = 0    THEN 'Entered'
+        WHEN pis.status = 5    THEN 'Update Running'
+        WHEN pis.status = 2    THEN 'Freeze Executing'
+    END         status,
+    p.job_id
+FROM
+    physical_inventories        p,
+    physical_inventory_sites    pis
+WHERE
+        p.business_unit_id = 30
+    AND p.business_unit_id = pis.business_unit_id
+    AND p.document_id      = pis.document_id
+    AND pis.status         = 0
+    --AND p.inventory_date   > trunc(sysdate - 300)
+    --AND trunc(p.inventory_date) = trunc(sysdate + 3)   -- 3 Days!
+    AND trunc(p.inventory_date) = trunc(sysdate + 4)   -- 4 Days!  Per Mike T
+
+ORDER BY
+    p.inventory_date desc,
+    pis.count_am_pm,
+    pis.site_id
+END
+  
+    $g_log->info($sql);
+    my $sth = $g_rms_dbh->prepare($sql);
+
+    $sth->execute();
+
+    while( my $row = $sth->fetchrow_hashref) {
+	p_log($row->{status} . " "  .$row->{site_id});
+        push(@g_sites, $row->{site_id});
+    }
+    if (@g_sites) {
+	@g_sites = uniq(@g_sites);
+    }
+    print Dumper \@g_sites if $DEBUG;
+
+    foreach( sort @g_sites){
+	create_trigger_file($_);
+    }
+}
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+    get_listing();
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date,
+        "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
