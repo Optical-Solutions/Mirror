@@ -49,7 +49,7 @@ my $g_curr_session_time_range_sth = $g_db_rms->prepare("select MRI_RIMA_RF.get_c
 or fatal_error("Failed to prepare session time range query !"); 
 
 #- Global variables --------------------------------------------------
-my $g_verbose = 1; #TODO set back to 0
+my $g_verbose = 0; 
 my $g_logfile = '/usr/local/mccs/log/' . basename(__FILE__) .  '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
@@ -69,12 +69,13 @@ sub send_mail {
 
     return if $g_verbose;    # Dont want to send email if on verbose mode
 
-    $go_mail->logObj($g_log);
-    $go_mail->subject($msg_sub);
-    $go_mail->sendTo($g_emails);
-    $go_mail->msg(@body);
-    $go_mail->hostName($g_host);
-    $go_mail->send_mail();
+    # $go_mail->logObj($g_log);
+    # $go_mail->subject($msg_sub);
+    # $go_mail->sendTo($g_emails);
+    # $go_mail->msg(@body);
+    # $go_mail->hostName($g_host);
+    # $go_mail->send_mail();
+    print "send_mail";
 }
 
 
