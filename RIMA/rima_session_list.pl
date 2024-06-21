@@ -138,6 +138,7 @@ sub my_main {
     
     while ( my $row = $sth->fetchrow_hashref ) {
         $g_log->info($row->{session_id});
+        $g_log->info("-- Testing");
         create_excel($row->{session_id},$row->{rf_user});
     
     };
