@@ -7,7 +7,7 @@
 #
 # Ported by: Hanny Januarius
 # Date:  Fri Dec  8 11:12:33 EST 2023
-#
+#TODO Add Comments Kaveh Sari
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -49,7 +49,7 @@ my $g_curr_session_time_range_sth = $g_db_rms->prepare("select MRI_RIMA_RF.get_c
 or fatal_error("Failed to prepare session time range query !"); 
 
 #- Global variables --------------------------------------------------
-my $g_verbose = 0;
+my $g_verbose = 1; #TODO set back to 0
 my $g_logfile = '/usr/local/mccs/log/' . basename(__FILE__) .  '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
@@ -138,7 +138,7 @@ sub my_main {
     
     while ( my $row = $sth->fetchrow_hashref ) {
     
-    create_excel($row->{session_id},$row->{rf_user});
+        create_excel($row->{session_id},$row->{rf_user});
     
     };
 
