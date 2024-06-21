@@ -69,13 +69,12 @@ sub send_mail {
 
     return if $g_verbose;    # Dont want to send email if on verbose mode
 
-    # $go_mail->logObj($g_log);
-    # $go_mail->subject($msg_sub);
-    # $go_mail->sendTo($g_emails);
-    # $go_mail->msg(@body);
-    # $go_mail->hostName($g_host);
-    # $go_mail->send_mail();
-    print "send_mail";
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_emails);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
 }
 
 
@@ -139,7 +138,6 @@ sub my_main {
     
     while ( my $row = $sth->fetchrow_hashref ) {
         $g_log->info($row->{session_id});
-        $g_log->info("-- Testing");
         create_excel($row->{session_id},$row->{rf_user});
     
     };
