@@ -294,6 +294,7 @@ select mri_rima_rf.get_pog_desc(BAR_CODE_ID,site_id) POG, BAR_CODE_ID upc,STYLE_
          
          
          my $filename = 'session_' . $session_id . '.xlsx';
+            $g_log->info($filename);
          my $o        = IBIS::ExcelWriter::File->write(
             outdir   => $g_data_dir,
             file     => $filename,
