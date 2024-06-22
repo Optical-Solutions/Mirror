@@ -1,0 +1,14 @@
+#!/bin/sh
+
+/usr/local/mccs/bin/wms/wms_item_add_update.pl
+sleep 1;
+/usr/local/mccs/bin/wms/wms_item_delete.pl
+sleep 1;
+/usr/local/mccs/bin/wms/wms_altsku_add.pl
+sleep 1;
+/usr/local/mccs/bin/wms/wms_altsku_delete.pl
+sleep 1;
+/usr/local/mccs/bin/wms/wms_pack_add_update.pl
+sleep 1;
+/usr/local/mccs/bin/wms/wms_pack_delete.pl 
+sleep 1;
