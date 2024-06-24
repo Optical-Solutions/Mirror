@@ -59,7 +59,10 @@ my $DEBUG = $g_opt{d};
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
 
-my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
+#$TODO uncomment next line, and delete two lines after that.
+#my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
+my $g_emails;
+$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
 my $g_dbname = $g_cfg->schedules_with_no_parameters_report->{dbname};
 
 print Dumper $g_emails if $DEBUG;
@@ -136,7 +139,8 @@ ECSS
     open( MAIL, "|/usr/sbin/sendmail -t" );
         print MAIL "To: " . $g_emails->{$user} . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
-        print MAIL "Cc: " . $g_emails->{RDI} . " \n";
+        #TODO, uncomment next line.
+        #print MAIL "Cc: " . $g_emails->{RDI} . " \n";
         print MAIL "Subject: $msg_sub \n";
         print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
           . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
@@ -179,15 +183,15 @@ sub my_main {
     }
 
     $g_log->info("-- Start ----------------------------------------");
-
+#TODO change line with parameter to null, and take out rownum line (delete)
     my $sql = <<END1;
 select schedule_id, object_name, description, date_created, parameter_selection_id 
 from   job_schedules
 where  
-       parameter_selection_id is null
+       parameter_selection_id is not null
 -- and    object_name ='SRJS0010'
 and object_name not in ('SRJS0240','SRJS0280','SRJS0290','SRJS0170')
-
+and rownum < 10
 
 
 END1
