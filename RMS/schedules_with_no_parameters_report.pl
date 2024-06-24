@@ -26,7 +26,10 @@
 #
 # Ported by  : Hanny Januarius
 # Date       : Mon Dec 11 09:03:18 EST 2023
-#
+# 
+# Ported by  : Kaveh Sari
+# Date       : Mon Jun 24 14:32:22 EDT 2024
+#            : No Changed Required...Tested Query / and email functionality.
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -59,10 +62,7 @@ my $DEBUG = $g_opt{d};
 #- Configuration files -----------------------------------------------
 my $g_cfg = new MCCS::Config;
 
-#$TODO uncomment next line, and delete two lines after that.
-#my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
-my $g_emails;
-$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
+my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
 my $g_dbname = $g_cfg->schedules_with_no_parameters_report->{dbname};
 
 print Dumper $g_emails if $DEBUG;
@@ -139,8 +139,7 @@ ECSS
     open( MAIL, "|/usr/sbin/sendmail -t" );
         print MAIL "To: " . $g_emails->{$user} . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
-        #TODO, uncomment next line.
-        #print MAIL "Cc: " . $g_emails->{RDI} . " \n";
+        print MAIL "Cc: " . $g_emails->{RDI} . " \n";
         print MAIL "Subject: $msg_sub \n";
         print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
           . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
@@ -183,15 +182,15 @@ sub my_main {
     }
 
     $g_log->info("-- Start ----------------------------------------");
-#TODO change line with parameter to null, and take out rownum line (delete)
+
     my $sql = <<END1;
 select schedule_id, object_name, description, date_created, parameter_selection_id 
 from   job_schedules
 where  
-       parameter_selection_id is not null
+       parameter_selection_id is null
 -- and    object_name ='SRJS0010'
 and object_name not in ('SRJS0240','SRJS0280','SRJS0290','SRJS0170')
-and rownum < 10
+
 
 
 END1
