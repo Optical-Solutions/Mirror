@@ -33,7 +33,10 @@ unless ( -e $g_log_dir ) {
 my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
 
 my $g_dbname = $g_cfg->wms_global->{DBNAME};
-my $g_emails = $g_cfg->dbms_pipes->{emails};
+#TODO uncomment next line, delete the next two after.
+#my $g_emails = $g_cfg->dbms_pipes->{emails};
+my $g_mails;
+$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
 my $g_dbh = IBIS::DBI->connect( dbname => $g_dbname );
 my $g_cmd = '';
 
