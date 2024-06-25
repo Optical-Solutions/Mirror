@@ -1,0 +1,134 @@
+#!/usr/local/mccs/perl/bin/perl
+#---------------------------------------------------------------------
+# Program    : e832_bake_em     
+# Author     : Hanny Januarius
+# Created    : Tue Mar 21 06:32:25 EDT 2017
+# Description: To fix half-baked batches
+#              Half-baked batch is batch that was submitted post inbound
+#              upload and it is picked up by error checks.
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use Getopt::Std;
+use DateTime;
+#use MCCS::Db_ibisora;
+use IBIS::DBI;
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Get option switches -----------------------------------------------
+our %g_opt = (
+    d => 0
+);
+getopts('d', \%g_opt);
+my $DEBUG = $g_opt{d};
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+
+#my $g_emails = $g_cfg->{'PUT YOUR APP NAME HERE'}->{emails};  #TODO
+my $g_emails = {rdistaff => 'rdistaff@usmc-mccs.org'};
+
+print Dumper $g_emails if $DEBUG;
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+Readonly my $g_logfile => '/usr/local/mccs/log/832/' . basename(__FILE__) . '.log';
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`; 
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+my $g_dbh = IBIS::DBI->connect(dbname => 'rms_p');
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body = ($msg_bod1, $msg_bod2);
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_emails);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+
+    eval {
+        $g_dbh->do("BEGIN e832_fix_half_baked(); END;");
+    };
+
+    if ( $@ ) {
+       fatal_error("$@");
+    }
+
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date,
+        "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
