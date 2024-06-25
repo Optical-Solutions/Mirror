@@ -35,7 +35,7 @@ my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 
 my $g_dbname = $g_cfg->wms_global->{DBNAME};
 #TODO uncomment next line, delete the next two after.
 #my $g_emails = $g_cfg->dbms_pipes->{emails};
-my $g_mails;
+my $g_emails;
 $g_emails->{kav}='kaveh.sari@usmc-mccs.org';
 my $g_dbh = IBIS::DBI->connect( dbname => $g_dbname );
 my $g_cmd = '';
