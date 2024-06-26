@@ -7,9 +7,9 @@
 #              Half-baked batch is batch that was submitted post inbound
 #              upload and it is picked up by error checks.
 #Port verified 
-#by          : Kaveh Sari
-#Date        : Wed Jun 26 14:24:14 EDT 2024
-#TODO        : Verify the appropriate config application to be used.
+#by           : Kaveh Sari
+#Date         : Wed Jun 26 14:24:14 EDT 2024
+#TODO         : Verify the appropriate configuration file that this script needs to use(if any).     
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -45,10 +45,7 @@ my $DEBUG = $g_opt{d};
 my $g_cfg = new MCCS::Config;
 
 #my $g_emails = $g_cfg->{'PUT YOUR APP NAME HERE'}->{emails};  #TODO
-#TODO uncomment next line and delete two liens after that.
-#my $g_emails = {rdistaff => 'rdistaff@usmc-mccs.org'};
-my $g_emails;
-$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
+my $g_emails = {rdistaff => 'rdistaff@usmc-mccs.org'};
 
 print Dumper $g_emails if $DEBUG;
 
