@@ -1,5 +1,10 @@
-#!/usr/bin/perl
-
+#!/usr/local/mccs/perl/bin/perl
+#---------------------------------------------------------------------
+# Program    : Stream_Claim.pl   
+#Ported by   : Kaveh Sari
+#Date         : Wed Jun 26 14:24:14 EDT 2024
+#
+#---------------------------------------------------------------------
 use strict;
 use warnings;
 use Data::Dumper;
@@ -103,7 +108,9 @@ if($@){
 my $scp_success = 0;
 if (( -s $hdr_file)&&(-s $dtl_file)){
     $scp_success =  $wrapper_obj->scp_head_detail_to_fmsserver();
-}else{
+}
+else
+{
     my $msg ="NO new claim header and/or detail files generated. 
              So, this could be from no new data. program will exit.";
     $wrapper_obj->{'log_obj'}->info($msg);
