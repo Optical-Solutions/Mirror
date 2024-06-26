@@ -287,10 +287,10 @@ sub print_detail_file {
 sub scp_head_detail_to_fmsserver {
     my ($self) = @_;
     my $server= $self->{REMOTE_SERVER};
-    #Move next line to next scp   
-    # 'scp -q /usr/local/mccs/data/genex/ap/source/*CL_*.DAT rdiusr@'.$server.':/usr/local/mccs/data/axsone/input/PO_RCV_CL/';
+    
     my $scp_cmd =
-        'scp -q /usr/local/mccs/data/genex/ap/source/*CL_*.DAT rdiusr@'.'hqm04ibissvr0010'.':/tmp';
+        'scp -q /usr/local/mccs/data/genex/ap/source/*CL_*.DAT rdiusr@'.$server.':/usr/local/mccs/data/axsone/input/PO_RCV_CL/';
+
     my $ret = system($scp_cmd);
     if ($ret) {
         print "WARNING: scp error happend when copy file to fms";
