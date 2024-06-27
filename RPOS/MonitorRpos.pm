@@ -45,6 +45,8 @@ sub _sget_dbh{
 
 sub _sget_log{
     my ($self) = @_;
+    #TODO remove next line
+    print '_sget_log \n';
     if($self->{'log_obj'}){
 	return $self->{'log_obj'};
     }else{
@@ -52,6 +54,8 @@ sub _sget_log{
 	new IBIS::Log::File( { 
 	    file => $self->_get_attribute('log_file') , 
 	    append => 1 } );
+                #TODO remove next line
+            print '_sget_log finshed complete \n';
 	return $self->{'log_obj'};	
     }
 }
