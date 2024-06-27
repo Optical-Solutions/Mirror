@@ -5,6 +5,7 @@ use File::Basename;
 use base ('Class::Accessor');
 use IBIS::Config::Auto;
 use IBIS::DBI;
+use IBIS::Log::File;
 
 
 ## 
