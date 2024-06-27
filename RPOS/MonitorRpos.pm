@@ -79,7 +79,7 @@ sub get_attribute{
 sub get_all_rms_site_open_info{
     my ($self) = @_;
     unless($self->{'dbi_obj'}){
-	$self->_sget_dbh();
+	    $self->_sget_dbh();
     }
     my $site_ref;
 ## get open days, sites and names
@@ -126,7 +126,8 @@ sub get_dir_list{
     
     my @ary = split(/\n/, $date_buffer);
     my $size = @ary;
-    if($size < 10){
+    #TODO remove 0 && next line.
+    if(0 && $size < 10){
 	my $msg ="Less than enough data for running the program. Will die.\n";
 	print $msg if ($self->_get_attribute('debug'));
 	$self->{'log_obj'}->info($msg) if defined $self->{'log_obj'};

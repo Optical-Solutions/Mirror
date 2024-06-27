@@ -52,7 +52,8 @@ my $subject    = 'Rpos File Monitor Report';
 my @list_addrs = split(/\|/, $to);
 
 foreach my $to_add(@list_addrs){
-    sendmail($to_add, $from, $subject, $compare_result);
+       #TODO remove comment next line
+    #sendmail($to_add, $from, $subject, $compare_result);
 }
 ## destructor...
 $monitor->destructor();
