@@ -23,6 +23,7 @@ $monitor = IBIS::MonitorRpos->new( conf_file => $config );
 if ($debug) {
     $monitor->{'debug'} = 1;
     print Dumper($monitor);
+    $monitor->_sget_log();
 }
 
 my $site_ref = $monitor->get_all_rms_site_open_info();
