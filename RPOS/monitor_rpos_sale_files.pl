@@ -14,17 +14,21 @@ use IBIS::Email;
 use IBIS::MonitorRpos;
 
 my ($config, $debug, $monitor);
-$debug = $ARGV[0];
+#$debug = $ARGV[0]; COmmented out so we can set debug to true all the time
+$debug = 1;
 ## The Object
 
 $config = '/usr/local/mccs/etc/rpos_monitor/monitor_rpos.conf';
 $monitor = IBIS::MonitorRpos->new( conf_file => $config );
+my $g_log;
+
 
 if ($debug) {
     $monitor->{'debug'} = 1;
     print Dumper($monitor);
     $monitor->_sget_log();
-    $monitor->{'log_obj'}->info('Start logging for monitor_rpos_sale_files.pl');
+    $g_log = $monitor->{'log_obj'};
+    $g_log->info('Start logging for monitor_rpos_sale_files.pl');
 }
 
 my $site_ref = $monitor->get_all_rms_site_open_info();

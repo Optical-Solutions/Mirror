@@ -127,8 +127,7 @@ sub get_dir_list{
     
     my @ary = split(/\n/, $date_buffer);
     my $size = @ary;
-    #TODO remove 0 && next line.
-    if(0 && $size < 10){
+    if($size < 10){
 	my $msg ="Less than enough data for running the program. Will die.\n";
 	print $msg if ($self->_get_attribute('debug'));
 	$self->{'log_obj'}->info($msg) if defined $self->{'log_obj'};
