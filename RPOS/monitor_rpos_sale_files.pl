@@ -24,6 +24,7 @@ if ($debug) {
     $monitor->{'debug'} = 1;
     print Dumper($monitor);
     $monitor->_sget_log();
+    $monitor->{'log_obj'}->info('Start logging for monitor_rpos_sale_files.pl');
 }
 
 my $site_ref = $monitor->get_all_rms_site_open_info();
