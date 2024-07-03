@@ -127,6 +127,8 @@ sub get_dir_list{
     
     my @ary = split(/\n/, $date_buffer);
     my $size = @ary;
+    #TODO Added this line to test for accuracy of $size
+print 'the size of the file is ' . $size;
     if($size < 10){
 	my $msg ="Less than enough data for running the program. Will die.\n";
 	print $msg if ($self->_get_attribute('debug'));
