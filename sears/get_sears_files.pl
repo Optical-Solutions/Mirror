@@ -23,8 +23,8 @@ use Readonly;
 use DateTime::Format::Strptime;
 use IBIS::DateTime::Retail;
 
-
-my $debug = 0;
+#TODO  Reset $debug back to zero
+my $debug = 1;
 my $g_cfg = new MCCS::Config;
 print Dumper($g_cfg->sears) if $debug;
 Readonly  my $LOG_FILE                => $g_cfg->sears->{log_file};
@@ -125,9 +125,9 @@ if (-s $outfile){ ## if file generated, do some database update
 ### subroutines ###
 sub copy_file_to_remote_server{
     my ($fp_file) = @_;
-     my $TARGET_SERVER = 'hqm04ibisvr0010';
-     my $REMOTE_DIR='/tmp';
-    my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.$TARGET_SERVER.':'.$REMOTE_DIR;
+     my $TARGET_SERVER2 = 'hqm04ibisvr0010';
+     my $REMOTE_DIR2='/tmp';
+    my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.$TARGET_SERVER2.':'.$REMOTE_DIR2;
      #my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.'hqm04ibisvr0010'.'./tmp';
     my $ret;
     if (-s $fp_file){
