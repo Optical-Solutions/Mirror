@@ -71,7 +71,7 @@ unless($dbh){
 ## get last closed year, period not processed yet.
 my ($rms_lst_closed_year, $rms_lst_closed_period)  = &get_last_closed_yearperiod();
 ##my ($rms_lst_closed_year, $rms_lst_closed_period) = ('2013','8');
-print "$rms_lst_closed_year, $rms_lst_closed_period"  if $debug;
+print "$rms_lst_closed_year, $rms_lst_closed_period \n"  if $debug;
 unless ($rms_lst_closed_year && $rms_lst_closed_period){
     my $msg = "No unprocessed closing year, closing period. Program will exit\n";
     $log_obj->info($msg);
@@ -86,7 +86,7 @@ if($rms_lst_closed_period eq '8'){ ## hardcoded for consistent with FMS
     $month =~ s/\s+//g;
 }
 
-print "$pd_end1, $month" if $debug;
+print "$pd_end1, $month \n" if $debug;
 unless ($pd_end1 && $month){
     print "Failed to get period end date: $pd_end1, $month\n";
     die; ## is this necessary?
@@ -94,6 +94,8 @@ unless ($pd_end1 && $month){
 ## if past all checks so far, then, go ahead to generate a new file...
 my $outfile =  $LOCAL_DIR.'/'.'Sears_'.$rms_lst_closed_year.'_'.$rms_lst_closed_period.".txt";
 my $ret_ref = &get_sears_data($rms_lst_closed_year, $rms_lst_closed_period);
+#TODO remove next line
+print 'Line 98 ' . @$ret_ref  . " \n";
 if($ret_ref){    
     my $stpd_month  = $month4sears->{$rms_lst_closed_period};
     &convert_2_genex_flat($ret_ref, $pd_end1, $rms_lst_closed_period, $stpd_month, $outfile);
