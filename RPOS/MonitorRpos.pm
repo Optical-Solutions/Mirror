@@ -1,4 +1,5 @@
 package IBIS::MonitorRpos;
+#This file is located at /usr/local/mccs/pm/IBIS  Kaveh Sari 7/3/2024
 use strict;
 use Data::Dumper;
 use File::Basename;
@@ -127,8 +128,6 @@ sub get_dir_list{
     
     my @ary = split(/\n/, $date_buffer);
     my $size = @ary;
-    #TODO Added this line to test for accuracy of $size
-print 'the size of the file is ' . $size;
     if($size < 10){
 	my $msg ="Less than enough data for running the program. Will die.\n";
 	print $msg if ($self->_get_attribute('debug'));
