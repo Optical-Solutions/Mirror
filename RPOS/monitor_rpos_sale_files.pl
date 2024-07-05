@@ -34,11 +34,11 @@ if ($debug) {
     $g_log = $monitor->{'log_obj'};
     $g_log->info('Start logging for monitor_rpos_sale_files.pl');
 }
-
+$g_log->info('Continuing with code') if ($debug);
+exit 1;
 my $site_ref = $monitor->get_all_rms_site_open_info();
 my $dir_list = $monitor->get_dir_list('rms_dir', 33); 
 print Dumper($dir_list) if ($debug);
-$g_log->info('Continuing with code') if ($debug);
 my $file_path = $monitor->get_attribute('rms_dir');
 my $file_ref = $monitor->get_file_site_ref($file_path,$dir_list);
 print Dumper($file_ref) if ($debug);
