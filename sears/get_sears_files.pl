@@ -251,8 +251,8 @@ sub get_sears_data{
 ## translate data into GLs
 sub convert_2_genex_flat{
     my ($ret, $in_period_endate,$in_period, $in_month, $outfile) = @_;
-
-    ##print Dumper($ret);
+    #TODO Recomment next line.
+    print 'the line 255 is get_sears_files' . Dumper($ret);
     
     open (OUT, ">$outfile") or "failed to open file to write: $outfile\n";
 
