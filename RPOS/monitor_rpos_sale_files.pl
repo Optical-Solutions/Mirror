@@ -10,7 +10,7 @@
 # Ported by : Kaveh Sari
 # Date      : Friday, July 5, 2024 2:12:21 PM           
 # Notes     : Verified Port...All appears to be Ok!
-#           : 
+#           : Invoked the log.
 ## --------------------------------------------------------------------------  
 use strict;
 use Data::Dumper;
@@ -18,8 +18,8 @@ use IBIS::Email;
 use IBIS::MonitorRpos;
 
 my ($config, $debug, $monitor);
-#$debug = $ARGV[0]; Commented out so we can set debug to true all the time
-$debug = 0;
+$debug = $ARGV[0]; 
+
 ## The Object
 
 $config = '/usr/local/mccs/etc/rpos_monitor/monitor_rpos.conf';
@@ -30,12 +30,12 @@ my $g_log;
 if ($debug) {
     $monitor->{'debug'} = 1;
     print Dumper($monitor);
+    #Kaveh Sari, Added next three lines.
     $monitor->_sget_log();
     $g_log = $monitor->{'log_obj'};
     $g_log->info('Start logging for monitor_rpos_sale_files.pl');
 }
-$g_log->info('Continuing with code') if ($debug);
-exit 1;
+
 my $site_ref = $monitor->get_all_rms_site_open_info();
 my $dir_list = $monitor->get_dir_list('rms_dir', 33); 
 print Dumper($dir_list) if ($debug);
@@ -60,7 +60,7 @@ my $to         = $monitor->get_attribute('to_email');
 my $from       = $monitor->get_attribute('from_email'); 
 my $subject    = 'Rpos File Monitor Report';
 my @list_addrs = split(/\|/, $to);
-
+$g_log->info('End logging for monitor_rpos_sale_files.pl') if ($debug);
 foreach my $to_add(@list_addrs){
        #TODO remove comment next line
     #sendmail($to_add, $from, $subject, $compare_result);

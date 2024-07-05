@@ -110,7 +110,7 @@ order by site_id ASC
 	return $site_ref;
     }else{
 	my $log_msg ="Failed to get sites information from RMS database, this program will exit.";
-	$self->{'log_obj'}->info($log_msg);
+	$self->{'log_obj'}->info($log_msg) if defined $self->{'log_obj'};
 	die;
     }
 }
@@ -178,7 +178,7 @@ sub get_file_site_ref{
 		    }
 		}else{
 		    my $msg = "failed to parse out site: $line";
-		    $self->{'log_obj'}->info($msg);
+		    $self->{'log_obj'}->info($msg) if defined $self->{'log_obj'};
 		    print "msg: $msg\n";
 		}	    
 	    }
@@ -221,7 +221,7 @@ sub exam_list_by_open_info{
     ##         else if both a and b has the count, then nothing missing.    
     unless($site_open_info && $site_file_info){
 	my $msg ="missing required values: site open info or site file info";
-	$self->{'log_obj'}->info($msg);
+	$self->{'log_obj'}->info($msg) if defined $self->{'log_obj'};
 	die;
     }
     
