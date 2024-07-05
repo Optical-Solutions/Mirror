@@ -62,8 +62,8 @@ my $subject    = 'Rpos File Monitor Report';
 my @list_addrs = split(/\|/, $to);
 $g_log->info('End logging for monitor_rpos_sale_files.pl') if ($debug);
 foreach my $to_add(@list_addrs){
-       #TODO remove comment next line
-    #sendmail($to_add, $from, $subject, $compare_result);
+
+sendmail($to_add, $from, $subject, $compare_result);
 }
 ## destructor...
 $monitor->destructor();
