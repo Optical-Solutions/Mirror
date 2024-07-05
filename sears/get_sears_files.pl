@@ -7,9 +7,9 @@
 #             It will extract sears commission data from RMS.
 #             Then, convert the data to a flat file which FMS can be used to genex directly.
 #             The file then will be sent to FMS server for genex.
-#            
-#			 
-#
+# Ported by : Kaveh Sari
+# Date      : Friday, July 5, 2024 2:12:21 PM           
+# Notes     : Verified Port...All appears to be Ok!
 # --------------------------------------------------------------------------   
 
 use strict;

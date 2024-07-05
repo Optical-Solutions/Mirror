@@ -7,6 +7,10 @@
 #             for which there are no sales.
 ##
 ##            The program must run a rdiusr.
+# Ported by : Kaveh Sari
+# Date      : Friday, July 5, 2024 2:12:21 PM           
+# Notes     : Verified Port...All appears to be Ok!
+#           : 
 ## --------------------------------------------------------------------------  
 use strict;
 use Data::Dumper;
@@ -14,8 +18,8 @@ use IBIS::Email;
 use IBIS::MonitorRpos;
 
 my ($config, $debug, $monitor);
-#$debug = $ARGV[0]; COmmented out so we can set debug to true all the time
-$debug = 1;
+#$debug = $ARGV[0]; Commented out so we can set debug to true all the time
+$debug = 0;
 ## The Object
 
 $config = '/usr/local/mccs/etc/rpos_monitor/monitor_rpos.conf';
@@ -34,7 +38,7 @@ if ($debug) {
 my $site_ref = $monitor->get_all_rms_site_open_info();
 my $dir_list = $monitor->get_dir_list('rms_dir', 33); 
 print Dumper($dir_list) if ($debug);
-
+$g_log->info('Continuing with code') if ($debug);
 my $file_path = $monitor->get_attribute('rms_dir');
 my $file_ref = $monitor->get_file_site_ref($file_path,$dir_list);
 print Dumper($file_ref) if ($debug);

@@ -6,7 +6,11 @@
 #Brief Desc: This program is to check the rpos loading process.  It will
 #            notify users if there are issues such as overwhelmed RMD BD   
 #            job scheduler or TAS/upstream processes. 
-#            
+# 
+# Ported by : Kaveh Sari
+# Date      : Friday, July 5, 2024 2:12:21 PM           
+# Notes     : Verified Port...All appears to be Ok!
+#           : No Data was found at the time of port.           
 # --------------------------------------------------------------------------   
 
 use strict;
