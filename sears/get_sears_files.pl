@@ -23,8 +23,7 @@ use Readonly;
 use DateTime::Format::Strptime;
 use IBIS::DateTime::Retail;
 
-#TODO  Reset $debug back to zero
-my $debug = 1;
+my $debug = 0;
 my $g_cfg = new MCCS::Config;
 print Dumper($g_cfg->sears) if $debug;
 Readonly  my $LOG_FILE                => $g_cfg->sears->{log_file};
@@ -94,8 +93,7 @@ unless ($pd_end1 && $month){
 ## if past all checks so far, then, go ahead to generate a new file...
 my $outfile =  $LOCAL_DIR.'/'.'Sears_'.$rms_lst_closed_year.'_'.$rms_lst_closed_period.".txt";
 my $ret_ref = &get_sears_data($rms_lst_closed_year, $rms_lst_closed_period);
-#TODO remove next line
-print 'Line 98 ' . @$ret_ref  . " \n";
+
 if($ret_ref){    
     my $stpd_month  = $month4sears->{$rms_lst_closed_period};
     &convert_2_genex_flat($ret_ref, $pd_end1, $rms_lst_closed_period, $stpd_month, $outfile);
@@ -251,8 +249,8 @@ sub get_sears_data{
 ## translate data into GLs
 sub convert_2_genex_flat{
     my ($ret, $in_period_endate,$in_period, $in_month, $outfile) = @_;
-    #TODO Recomment next line.
-    print 'the line 255 is get_sears_files' . Dumper($ret);
+
+    print Dumper($ret);
     
     open (OUT, ">$outfile") or "failed to open file to write: $outfile\n";
 
