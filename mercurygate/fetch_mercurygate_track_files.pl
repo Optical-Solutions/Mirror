@@ -156,8 +156,9 @@ if($sftp_success){
     $msg .=
 	"Failed in fetching Mercurygate track file: $remote_ftp_file\n";
     $tms->{'log_obj'}->log_info("$msg");
-    $tms->sendnotice( $tms->{POC}, $tms->{MAIL_FROM},
-		      "$hostname: Failed to fetch track file from $tms->{REMOTE_SERVER}", $msg );
+    #TODO Uncomment next two lines.
+    #tms->sendnotice( $tms->{POC}, $tms->{MAIL_FROM},
+		      #"$hostname: Failed to fetch track file from $tms->{REMOTE_SERVER}", $msg );
 }
 
 ## Log finish time
