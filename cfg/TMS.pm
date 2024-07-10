@@ -349,16 +349,21 @@ sub sftp_file_from_remote_server {
     return $ftp_result;
 }
 
-
+# Added debugging code with 5 log statements.
 sub sftp_list_and_get {
     my ( $self, $remote_file, $local_file, $remote_dir) = @_;
+    $self->{'log_obj'}->log_info('remote file is' . $remote_file . "\n");
+        $self->{'log_obj'}->log_info('local file is' . $local_file . "\n");
+        $self->{'log_obj'}->log_info('remote dir is' . $remote_dir . "\n");
+
     my $c = IBIS::Crypt->new();
     my $sftp = Net::SFTP->new(
 	$self->{REMOTE_SERVER},
 	user     => $self->{SFTP_USER},
 	password => $c->decrypt( $self->{PASSWORD} )
 	) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
-
+        $self->{'log_obj'}->log_info('sftp user is' . $self->{SFTP_USER} . "\n");
+        $self->{'log_obj'}->log_info('password is' . $c->decrypt( $self->{PASSWORD} ) . "\n");
 
   ## take care of possible spaces in the STUPD MercuryGate names  
     my @flist;
