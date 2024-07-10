@@ -370,8 +370,10 @@ sub sftp_list_and_get {
     my @flist;
     my @flist_ref = $sftp->ls($remote_dir);
     
+    #TODO Printing each file name from a list array.
     foreach my $key(@flist_ref){
 	push(@flist, $key->{'filename'});
+    $self->{'log_obj'}->log_info('file ' . $key->{'filename'} . "\n");
     }
     
     
@@ -379,7 +381,7 @@ sub sftp_list_and_get {
     
     my $tmp_msg = "\nbase name: $r_bn\n";
     $self->{'log_obj'}->log_info($tmp_msg);
-    
+            $self->{'log_obj'}->log_info("line 384\n");
 =head
     my @found = grep {/$r_bn/g} @flist; 
     print "found:\n";
@@ -407,6 +409,7 @@ sub sftp_list_and_get {
 	    } 
 	}
     }
+    $self->{'log_obj'}->log_info("line 411\n");
     if(@found ==0){
 	$r_bn =~ s/\s+//g; ## remove space:
 	foreach my $file(@flist){
@@ -414,7 +417,7 @@ sub sftp_list_and_get {
 		push(@found, $r_bn);
 	    }    
 	}
-	
+	    $self->{'log_obj'}->log_info("line 420\n");
 	if(@found){ ## name without space was found:
 	    $remote_file =~ s/\s+//g;
 	    $local_file  =~ s/\s+//g;
@@ -433,6 +436,7 @@ sub sftp_list_and_get {
     } else {
         $self->{'log_obj'}->log_info("\nSFTP failed for some reason: $!\n");
     }
+        $self->{'log_obj'}->log_info($ftp_result . "line 439\n");
     return $ftp_result;
 }
 
