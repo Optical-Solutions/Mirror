@@ -431,7 +431,7 @@ sub sftp_list_and_get {
     	    $self->{'log_obj'}->log_info("line 430\n");
 ## with name or without a name, anyways take the front space in names away:
     $local_file =~ s/\s+//g;
-    
+    $self->{'log_obj'}->log_info("right before sftp\n");
     my $ftp_result = $sftp->get( $remote_file, $local_file );
     if ($ftp_result) {
         $self->{'log_obj'}->log_info("\nSFTP successful!\n");
