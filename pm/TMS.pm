@@ -415,6 +415,7 @@ sub sftp_list_and_get {
 	foreach my $file(@flist){
 	    if($r_bn eq $file){
 		push(@found, $r_bn);
+        $self->{'log_obj'}->log_info("in  411 loop\n");
 	    }    
 	}
 	    $self->{'log_obj'}->log_info("line 420\n");
