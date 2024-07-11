@@ -411,11 +411,12 @@ sub sftp_list_and_get {
     }
     $self->{'log_obj'}->log_info("line 411\n");
     if(@found ==0){
+    $self->{'log_obj'}->log_info("in  411 loop\n");
 	$r_bn =~ s/\s+//g; ## remove space:
 	foreach my $file(@flist){
 	    if($r_bn eq $file){
 		push(@found, $r_bn);
-        $self->{'log_obj'}->log_info("in  411 loop\n");
+     
 	    }    
 	}
 	    $self->{'log_obj'}->log_info("line 420\n");
