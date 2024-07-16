@@ -1,0 +1,302 @@
+#!/usr/local/mccs/perl/bin/perl -w
+#---------------------------------------------------------------------
+# Program    : getprack_sftp.pl
+# Author     : Hanny Januarius
+# Created    : Thu Feb 25 07:48:28 EST 2016
+# Description: Get BOA banking Payroll confirmation
+#              Get a file from from BOA server and mail it to
+#              recipient
+#---------------------------------------------------------------------
+use strict;
+use IBIS::DBI;
+use IBIS::Log::File;
+use File::Basename;
+use File::Path;
+use Readonly;
+use MCCS::Config;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use MCCS::WMS::Sendmail;
+use Getopt::Std;
+use DateTime;
+use Net::SFTP::Foreign;
+use MCCS::Db_ibisora;
+
+# Flush output
+$| = 1;
+
+#- One process at a time ---------------------------------------------
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+
+#- Get option switches -----------------------------------------------
+our %g_opt = ( d => 0 );
+getopts( 'd', \%g_opt );
+my $DEBUG = $g_opt{d};
+
+#- Configuration files -----------------------------------------------
+my $g_cfg = new MCCS::Config;
+
+my $g_email      = $g_cfg->getprack_sftp->{email};
+my $g_cust_email = $g_cfg->getprack_sftp->{cust_email};
+my $g_data_d     = $g_cfg->getprack_sftp->{data_dir};
+my $g_dbh        = MCCS::Db_ibisora->connect( dbname => "ibisora" );
+$g_dbh->{AutoCommit} = 0;
+
+print Dumper $g_email if $DEBUG;
+
+#- Global variables --------------------------------------------------
+my $g_verbose = 0;
+my $g_long_date = `date +"%D %r"`;
+chomp($g_long_date);
+Readonly my $g_logfile => '/usr/local/mccs/log/payroll/' . basename(__FILE__) ."_". $$ . '.log';
+my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
+my $g_host = `hostname`;
+chomp($g_host);
+my $go_mail = MCCS::WMS::Sendmail->new();
+
+#---------------------------------------------------------------------
+# SUBS
+#---------------------------------------------------------------------
+sub any_transmitted {
+    my $sql = <<ENDSQL;
+select count(*)
+from bank_filetransfers
+where trunc(rowdate) = trunc(sysdate)
+and  bkft_result = 'Transmitted'
+ENDSQL
+    my $sth = $g_dbh->prepare($sql);
+    $sth->execute();
+    my $ret = ( $sth->fetchrow_array )[0];
+
+    return $ret;
+}
+
+#---------------------------------------------------------------------
+sub send_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body     = ( $msg_bod1, $msg_bod2 );
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_email);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub send_cust_mail {
+    my $msg_sub  = shift;
+    my $msg_bod1 = shift;
+    my $msg_bod2 = shift || '';
+    my @body     = ( $msg_bod1, $msg_bod2 );
+
+    return if $g_verbose;    # Dont want to send email if on verbose mode
+
+    $go_mail->logObj($g_log);
+    $go_mail->subject($msg_sub);
+    $go_mail->sendTo($g_cust_email);
+    $go_mail->msg(@body);
+    $go_mail->hostName($g_host);
+    $go_mail->send_mail();
+}
+
+#---------------------------------------------------------------------
+sub fatal_error {
+    my $msg = shift;
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $msg );
+    $g_log->error($msg);
+    die $msg;
+}
+
+#---------------------------------------------------------------------
+sub make_dir {
+    my $d = shift;
+    unless ( -d $d ) {
+        eval { mkpath($d); };
+        if ($@) {
+            fatal_error("Could not create directory $d, $@\n");
+        }
+    }
+}
+
+#---------------------------------------------------------------------
+sub get_confirmation_file {
+
+    my $host = $g_cfg->banking_sftp->{SFTPHOST_BOA};
+    my $user = $g_cfg->banking_sftp->{SFTPUSER_BOA};
+    my $pass = $g_cfg->banking_sftp->{SFTPPW_BOA};
+
+    # TODO ---------------------------------------
+    # TODO ... remove this DEBUG before go live
+    if ($DEBUG) {
+        $host = 'fmsdev.usmc-mccs.org';
+        $user = 'rdiusr';
+        $pass = '2UC9ze';
+    }
+
+    # TODO ---------------------------------------
+
+    $g_log->info("SFTP $host");
+    my $sftp = Net::SFTP::Foreign->new(
+        $host,
+        user     => $user,
+        password => $pass,
+        port     => 22
+    );
+
+    my $dir     = "outgoing";
+    my $dirlist = $sftp->ls($dir);
+    my @return  = ();
+
+    make_dir($g_data_d);
+
+    if ( defined($dirlist) ) {
+        $g_log->info("Getting files from $host:");
+    }
+    else {
+        $g_log->info("No Files detected.");
+        #return "";
+        return []; # anonymous ref of empty array
+    }
+
+    foreach my $e ( @{$dirlist} ) {
+        my $file = $e->{filename};
+        next if $file =~ m/^\.+/;
+
+        # Only get file with this filename
+        #---------------------------------
+        if ( $file =~ m/^GAFSACK/i ) {
+            $g_log->info(" $file");
+        }
+        else {
+            $g_log->info(" $file SKIPPED.");
+            next;
+        }
+
+        my $outfile = $g_data_d . '/' . $file;
+
+        # Only get files that has newer mtime!
+
+        if ( ( -e $outfile ) && ( -s $outfile == $e->{a}->{size} ) ) {
+            $g_log->info("$e->{filename} $e->{a}->{size} bytes SKIPPED. Old file in download dir.");
+        }
+        else {
+
+            #---------------
+            # NEW files here
+            #---------------
+            $sftp->get( "$dir/$file", $outfile )
+              or fatal_error( "Could not sftp get $file from $host because " . $sftp->error() );
+            $g_log->info("$e->{filename} $e->{a}->{size} bytes");
+
+            push( @return, $e->{filename} );
+        }
+    }
+    return \@return;
+}
+
+#---------------------------------------------------------------------
+sub read_from {
+    my $file = shift;
+    $file = $g_data_d . '/' . $file;
+    my $fh;
+    open( $fh, $file ) or fatal_error("Could not read file $file.");
+    my $str = do { local $/; <$fh> };
+    close $fh;
+
+    return $str;
+}
+
+#---------------------------------------------------------------------
+sub update_tracking {
+    my $file   = shift;
+    my $yymmdd = '';
+    my $cif;
+
+    if ( $file =~ m/GAFSACK.(\d{6})$/ ) {
+        $yymmdd = $1;
+        $cif    = "cifprtx_" . $yymmdd;
+        my $sql = <<END;
+update bank_filetransfers 
+set bkft_result = 'Acknowledged' 
+where bkft_result = 'Transmitted' 
+and bkft_filename like '$cif%'
+END
+        $g_log->info($sql);
+        my $sth = $g_dbh->prepare($sql);
+        eval { $sth->execute(); };
+        if ($@) {
+            fatal_error("$@");
+        }
+        else {
+            $g_dbh->commit;
+        }
+    }
+    else {
+        $g_log->info("Could not get date from file '$file'");
+    }
+}
+
+#---------------------------------------------------------------------
+# Pseudo Main which is called from MAIN
+#---------------------------------------------------------------------
+sub my_main {
+    my $sub = __FILE__ . " the_main";
+    if ($g_verbose) {
+
+        # Record Everything
+        $g_log->level(5);
+    }
+    else {
+
+        # Record Everything, except debug logs
+        $g_log->level(4);
+    }
+
+    $g_log->info("-- Start ----------------------------------------");
+    if ( any_transmitted() ) {
+        my $files = get_confirmation_file();
+        foreach my $f ( @{$files} ) {
+            if ( -e "$g_data_d/$f" ) {
+                my $msg_body = read_from($f);
+                my $subject  = "CIF Ack: $g_data_d/$f";
+                $g_log->info("Sending mail based on file $f");
+                send_cust_mail( $subject, $msg_body );
+                update_tracking($f);
+            }
+            else {
+                $g_log->info("File $g_data_d/$f MISSING.");
+            }
+        }
+    }
+    else {
+        $g_log->info("No files need any Ack Confirmation.");
+    }
+    $g_log->info("-- End ------------------------------------------");
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+# Execute the main
+eval { my_main() };
+if ($@) {
+    send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, "Untrapped Error:\n\n", " $@" );
+    $g_log->info($@);
+}
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
