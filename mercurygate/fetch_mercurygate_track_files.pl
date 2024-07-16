@@ -72,8 +72,7 @@ $tms->{'log_obj'}->info($start_time);
 ## a: file name
 
 my ($ymd_str, $hms_str) = &get_yesterday_time_string();
-#TODO remove next line
-    $ymd_str='20240708';
+
 my $track_file_end   = $tms->{TRACK_FILE_END};
 my $fn_sufx          = $ymd_str.$track_file_end; ## strange file name with a space in the front!!!
 my $remote_ftp_file  = $tms->{REMOTE_OUTBOUND} . $fn_sufx;
