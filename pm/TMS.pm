@@ -437,7 +437,9 @@ sub sftp_list_and_get {
     print ('===');
     print Dumper($ftp_result);   
     print ('===');
-    if ($ftp_result) {
+    #TODO uncomment next line and delete after that
+    #if ($ftp_result) {
+    if ($ftp_result  eq '') {
         $self->{'log_obj'}->log_info("\nSFTP successful!\n");
     } else {
         $self->{'log_obj'}->log_info("\nSFTP failed for some reason: $!\n");
