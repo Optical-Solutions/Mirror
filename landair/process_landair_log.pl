@@ -10,7 +10,8 @@ use strict;
 use IBIS::Email;
 use Data::Dumper;
 
-my $debug = 0;
+#TODO change debug back to 0
+my $debug = 1;
 
 my $logdir ='/usr/local/mccs/log/edi/edi_tms';
 my $logfile = $logdir.'/poshipment_to_landair_log_file';
