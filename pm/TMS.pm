@@ -434,6 +434,9 @@ sub sftp_list_and_get {
     $self->{'log_obj'}->log_info("local $local_file remote $remote_file right before sftp\n");
     my $ftp_result = $sftp->get( $remote_file, $local_file );
     $self->{'log_obj'}->log_info($ftp_result . "line 436\n");
+    print ('===');
+    print Dumper($sftp_result);   
+    print ('===');
     if ($ftp_result) {
         $self->{'log_obj'}->log_info("\nSFTP successful!\n");
     } else {
