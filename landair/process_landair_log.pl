@@ -71,7 +71,9 @@ if($s_size > 0){
 
 sub send_warnings{
 ##if ((($n_size < 2)&&($s_size == 0)) || (($s_size <1)&&($n_size ==0)) ){
-    my $list_str  ='rdistaff@usmc-mccs.org|';
+    #TODO remove uncomment next line, and delete line after that.
+    #my $list_str  ='rdistaff@usmc-mccs.org|';
+    my $list_str  ='kaveh.sari@usmc-mccs.org|';
     my $from_str ='rdistaff@usmc-mccs.org';
     my $subject ="(TEST) Warning: LANDAIR FILE TRANSFER TROUBLES!!!";
     my $body = $total_buff;
