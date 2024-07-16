@@ -10,8 +10,8 @@ use strict;
 use IBIS::Email;
 use Data::Dumper;
 
-#TODO change debug back to 0
-my $debug = 1;
+
+my $debug = 0;
 
 my $logdir ='/usr/local/mccs/log/edi/edi_tms';
 my $logfile = $logdir.'/poshipment_to_landair_log_file';
@@ -71,9 +71,7 @@ if($s_size > 0){
 
 sub send_warnings{
 ##if ((($n_size < 2)&&($s_size == 0)) || (($s_size <1)&&($n_size ==0)) ){
-    #TODO remove uncomment next line, and delete line after that.
-    #my $list_str  ='rdistaff@usmc-mccs.org|';
-    my $list_str  ='kaveh.sari@usmc-mccs.org|';
+    my $list_str  ='rdistaff@usmc-mccs.org|';
     my $from_str ='rdistaff@usmc-mccs.org';
     my $subject ="(TEST) Warning: LANDAIR FILE TRANSFER TROUBLES!!!";
     my $body = $total_buff;
