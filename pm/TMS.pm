@@ -364,7 +364,7 @@ sub sftp_list_and_get {
 	password => $c->decrypt( $self->{PASSWORD} )
 	) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
         $self->{'log_obj'}->log_info('sftp user is' . $self->{SFTP_USER} . "\n");
-        $self->{'log_obj'}->log_info('password is' . $c->decrypt( $self->{PASSWORD} ) . "\n");
+        $self->{'log_obj'}->log_info('password is ' . $c->decrypt( $self->{PASSWORD} ) . "\n");
 
   ## take care of possible spaces in the STUPD MercuryGate names  
     my @flist;

@@ -63,7 +63,8 @@ sub scp_856_loading_logs{
     my $scp_cmd =
 	"scp  ".$self->{SFTP_USER}.'@'.$self->{LOG_SERVER}.
 	':'.$self->{RMT_LOG_DIR}.$self->{LOG_FILE_PREFIX}.
-	'*'."    $self->{LOCAL_LOG_STG_DIR}";    
+	'*'."    $self->{LOCAL_LOG_STG_DIR}";   
+	 $self->{'log_obj'}->log_info('password is ' . $c->decrypt( $self->{PASSWORD} ) . "\n"); 
     print "$scp_cmd\n" if $self->is_debug();
     my $ret = system($scp_cmd);
     unless($ret){
