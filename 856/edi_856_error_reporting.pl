@@ -78,9 +78,7 @@ unless($ret){
 	    my $th_str ='Asn_name|Vendor_id|PO|Error_msg|Log_name|';
 	    my $subject =  '856 Invalid Vendors (part1)';
 	    my $content = $e856->html_table_via_sth_or_aryref($ary_ref,$th_str,$subject,35);
-        #TODO uncomment next line, and delete line after that.
-	    #$e856->send_html_by_email($subject, $e856->{MAIL_CC}, $content);
-        $e856->send_html_by_email($subject, 'kaveh.sari@usmc-mccs.org', $content);
+	    $e856->send_html_by_email($subject, $e856->{MAIL_CC}, $content);
 	    ##$e856->send_report();
 	}
 	print Dumper($e856) if($e856->is_debug);

@@ -61,13 +61,13 @@ sub _sget_report_buffer{
 sub scp_856_loading_logs{
     my ($self) = @_;
 	#TODO remove next line
-	my $c = IBIS::Crypt->new();
+	#my $c = IBIS::Crypt->new();
     my $scp_cmd =
 	"scp  ".$self->{SFTP_USER}.'@'.$self->{LOG_SERVER}.
 	':'.$self->{RMT_LOG_DIR}.$self->{LOG_FILE_PREFIX}.
 	'*'."    $self->{LOCAL_LOG_STG_DIR}"; 
 	#TODO Remove next line  
-	$self->{'log_obj'}->info("password is " . $c->decrypt( $self->{PASSWORD} ) . "\n"); 
+	#$self->{'log_obj'}->info("password is " . $c->decrypt( $self->{PASSWORD} ) . "\n"); 
     print "$scp_cmd\n" if $self->is_debug();
     my $ret = system($scp_cmd);
     unless($ret){
