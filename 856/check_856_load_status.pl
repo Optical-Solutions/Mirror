@@ -11,7 +11,8 @@ use Fcntl qw(:flock);
 use Data::Dumper;
 use IBIS::DBI;
 ##use IBIS::Email;
-my $debug = 0;
+#TODO change debug back to 0
+my $debug = 1;
 my $ld_status_ref;
 
 my $dbh = IBIS::DBI->connect( dbname => 'rms_p', attribs => {AutoCommit => 0} );
