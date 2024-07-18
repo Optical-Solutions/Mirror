@@ -60,8 +60,9 @@ sub get_yesterday_files{
     my ($data_dir) = @_;
     
     ## my $buffer = `find /usr/local/mccs/scratch/yuc_temp/856_snty_check/test_data/ -ctime 0`;
-    my $buffer = `find $data_dir -ctime 1`;
-
+ #TODO uncomment next line, and delete after that.
+   # my $buffer = `find $data_dir -ctime 1`;
+    my $buffer = `find $data_dir`;
     if($debug) {print Dumper($buffer);}
     my @ary = split(/\n/, $buffer);
      
