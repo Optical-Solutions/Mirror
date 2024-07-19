@@ -1,11 +1,8 @@
-pip install ldap3
-
- 
-
 from ldap3 import Server, Connection, ALL
 
 # Define the server and connection details
-server = Server('ldap://10.100.12.210', get_info=ALL)
+#server = Server('ldap://10.100.12.210', get_info=ALL)
+server = Server('10.100.12.210', get_info=ALL)
 conn = Connection(server, user='rdiusr', password='2UC9ze2UC9ze2UC9ze#', auto_bind=True)
 
 # Check if the connection is bound successfully
