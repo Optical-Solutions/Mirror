@@ -3,6 +3,7 @@ package IBIS::TMS;
 use strict;
 use Data::Dumper;
 use File::Basename;
+use Net::SFTP::Foreign;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -334,7 +335,7 @@ sub check_presence{
 sub sftp_file_from_remote_server {
     my ( $self, $remote_file, $local_file) = @_;
     my $c = IBIS::Crypt->new();
-    my $sftp = Net::SFTP->new(
+    my $sftp = Net::SFTP::Foreign->new(
 	$self->{REMOTE_SERVER},
 	user     => $self->{SFTP_USER},
 	password => $c->decrypt( $self->{PASSWORD} )
@@ -358,7 +359,7 @@ sub sftp_list_and_get {
         $self->{'log_obj'}->log_info('remote dir is' . $remote_dir . "\n");
 
     my $c = IBIS::Crypt->new();
-    my $sftp = Net::SFTP->new(
+    my $sftp = Net::SFTP::Foreign->new(
 	$self->{REMOTE_SERVER},
 	user     => $self->{SFTP_USER},
 	password => $c->decrypt( $self->{PASSWORD} )
