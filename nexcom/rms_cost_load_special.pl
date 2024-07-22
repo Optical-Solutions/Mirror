@@ -34,7 +34,7 @@ Readonly::Scalar my $LOGFILE          => '/usr/local/mccs/log/nexcom/rms_cost_lo
 #TODO, uncomment next line and delete line after that.
 #Readonly::Scalar my $MAIL_TO          => 'rdistaff@usmc-mccs.org|';
 Readonly::Scalar my $MAIL_TO          => 'kaveh.sari@usmc-mccs.org|';
-Readonly::Scalar my $MAIL_CC          => q{};
+Readonly::Scalar my $MAIL_CC          => q{kaveh.sari@usmc-mccs.org};
 Readonly::Scalar my $CONNECT_INSTANCE => 'rms_p';
 Readonly::Scalar my $FTP_CONNECT      => 'nexcom_production';
 
