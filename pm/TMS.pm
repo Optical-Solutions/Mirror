@@ -3,7 +3,9 @@ package IBIS::TMS;
 use strict;
 use Data::Dumper;
 use File::Basename;
-use Net::SFTP::Foreign;
+
+#TODO uncomment next line.
+#use Net::SFTP::Foreign;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -359,13 +361,27 @@ sub sftp_list_and_get {
         $self->{'log_obj'}->log_info('remote dir is' . $remote_dir . "\n");
 
     my $c = IBIS::Crypt->new();
-    my $sftp = Net::SFTP::Foreign->new(
+    #TODO uncomment next line, and delete line after that.
+    #my $sftp = Net::SFTP::Foreign->new(
+    my $sftp = Net::SFTP->new(
 	$self->{REMOTE_SERVER},
 	user     => $self->{SFTP_USER},
 	password => $c->decrypt( $self->{PASSWORD} )
 	) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
         $self->{'log_obj'}->log_info('sftp user is ' . $self->{SFTP_USER} . "\n");
         $self->{'log_obj'}->log_info('password is ' . $c->decrypt( $self->{PASSWORD} ) . "\n");
+# ==========================================================================================
+#  # Create an SFTP object
+#  my $sftp = Net::SFTP::Foreign->new($hostname, user => $username, password => $password);
+
+
+#  # Check for errors in creating the SFTP object
+#  die "Could not establish SFTP connection: " . $sftp->error unless defined $sftp;
+
+#  # Upload the local file
+#  $sftp->put($local_path, $remote_path) or die "Failed to upload file: " . $sftp->error;
+#  ========================================================================================
+
 
   ## take care of possible spaces in the STUPD MercuryGate names  
     my @flist;
