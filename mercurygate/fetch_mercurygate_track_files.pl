@@ -3,12 +3,12 @@
 use strict;
 use warnings;
 use IBIS::EDI;
-use IBIS::TMS;
 use Data::Dumper;
 use Getopt::Std;
 use POSIX qw(strftime WNOHANG);
 use IBIS::Log::File;
 use IBIS::SFTP;
+use IBIS::TMS;
 use Sys::Hostname;
 use Fcntl qw(:flock);
 use Getopt::Long;
