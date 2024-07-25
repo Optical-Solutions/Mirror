@@ -6,6 +6,7 @@ use File::Basename;
 
 #TODO uncomment next line.
 use Net::SFTP::Foreign;
+use Net::SFTP;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -361,29 +362,29 @@ sub sftp_list_and_get {
         $self->{'log_obj'}->log_info('remote dir is' . $remote_dir . "\n");
 
 #===============================================================================
-       my $c = IBIS::Crypt->new();
-       my %arglist;
-       my $sftp;
-       #my $servers  = $g_cfg->acv_DATA->{FTP_SERVERS};
-       #my $remote_d = $g_cfg->acv_DATA->{REMOTE_DIRS};
-       $arglist{user} = $self->{SFTP_USER};
-       $arglist{password} = $c->decrypt( $self->{PASSWORD};
-       $arglist{more}     = '-v';
-eval { $sftp = Net::SFTP::Foreign->new($self->{REMOTE_SERVER}, %arglist ) };
+#        my $c = IBIS::Crypt->new();
+#        my %arglist;
+#        my $sftp;
+#        #my $servers  = $g_cfg->acv_DATA->{FTP_SERVERS};
+#        #my $remote_d = $g_cfg->acv_DATA->{REMOTE_DIRS};
+#        $arglist{user} = $self->{SFTP_USER};
+#        $arglist{password} = $c->decrypt($self->{PASSWORD};
+#        $arglist{more}     = '-v';
+# eval { $sftp = Net::SFTP::Foreign->new($self->{REMOTE_SERVER}, %arglist ) };
 #===============================================================================
 if ($@){
     die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
 }
 print ('===$sftp');
 print Dumper($sftp);
-    # my $c = IBIS::Crypt->new();
-    # #TODO uncomment next line, and delete line after that.
-    # #my $sftp = Net::SFTP::Foreign->new(
-    # my $sftp = Net::SFTP->new(
-	# $self->{REMOTE_SERVER},
-	# user     => $self->{SFTP_USER},
-	# password => $c->decrypt( $self->{PASSWORD} )
-	# ) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
+    my $c = IBIS::Crypt->new();
+    #TODO uncomment next line, and delete line after that.
+    #my $sftp = Net::SFTP::Foreign->new(
+    my $sftp = Net::SFTP->new(
+	$self->{REMOTE_SERVER},
+	user     => $self->{SFTP_USER},
+	password => $c->decrypt( $self->{PASSWORD} )
+	) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
         $self->{'log_obj'}->log_info('sftp user is ' . $self->{SFTP_USER} . "\n");
         $self->{'log_obj'}->log_info('password is ' . $c->decrypt( $self->{PASSWORD} ) . "\n");
 # ==========================================================================================
