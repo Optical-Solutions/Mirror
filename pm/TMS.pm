@@ -376,7 +376,7 @@ if ($@){
     die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
 }
 print ('===$sftp');
-print Dumper($sftp);
+#print Dumper($sftp);
     my $c = IBIS::Crypt->new();
     #TODO uncomment next line, and delete line after that.
     #my $sftp = Net::SFTP::Foreign->new(
