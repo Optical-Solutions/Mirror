@@ -368,7 +368,7 @@ sub sftp_list_and_get {
        my $sftp;
        $arglist{user} = $self->{SFTP_USER};
        $arglist{password} = $c->decrypt($self->{PASSWORD});
-       $arglist{more}     = '-v';
+       #$arglist{more}     = '-v';
 eval { $sftp = Net::SFTP::Foreign->new($self->{REMOTE_SERVER}, %arglist ) };
 #===============================================================================
 if ($@){
