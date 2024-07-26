@@ -141,6 +141,7 @@ if ($insert_only) {
 # Cache some data before we start ----------------------------------------------
 
 my $nex_styles = MCCS::RMS::CostLoad::get_nex_styles($dbh);
+$log->log_info("Line 144 \n");
 
 #my $nex_retail_load; # = get_nex_retail_load($dbh);
 
@@ -152,13 +153,14 @@ $dbh->disconnect();
 my $pid;
 
 for (@files) {
-
+$log->log_info("$_ Line 156 \n");
     # XXX fork here
 
     if ( $pid = fork ) {
         next;
     }
     elsif ( defined($pid) ) {
+        $log->log_info("$pid Line 163 \n");
         $dbh = IBIS::DBI->connect( dbname => $CONNECT_INSTANCE )
             or $log->log_die("Cannot connect to RAMS database\n");
 
