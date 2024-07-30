@@ -514,7 +514,8 @@ sub update_nex_retail_load {
     my $nex_current_retail = $nex->{retail_price};
 
     my $last_nex_change_date = $date;
-
+    #TODO remove next line
+    $log->log_info("$estimated_landed_cost");
     if ($debug) {
         print {$fh}
             "RECORD INSERTED: $nex->{style_id}\t$nex->{zone_id}\t$estimated_landed_cost\t$retail_price\t$nex_previous_retail_price\t$nex_current_retail\t$last_nex_change_date\n";
