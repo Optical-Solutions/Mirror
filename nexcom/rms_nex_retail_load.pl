@@ -517,7 +517,13 @@ sub update_nex_retail_load {
     
     if ($debug) {
              #TODO remove next line
-    	     $log->log_info("estimated landed cosgt is . $estimated_landed_cost");
+             if (defined $estimated_landed_cost){
+    	        $log->log_info("estimated landed cosgt is  $estimated_landed_cost");
+             }
+             else {
+                $log->log_info("estimated landed cosgt is  undef");
+             }
+
         print {$fh}
             "RECORD INSERTED: $nex->{style_id}\t$nex->{zone_id}\t$estimated_landed_cost\t$retail_price\t$nex_previous_retail_price\t$nex_current_retail\t$last_nex_change_date\n";
     }
