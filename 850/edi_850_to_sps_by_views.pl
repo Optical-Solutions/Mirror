@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 
 ## Author: Chuck(Chunhui) Yu(yuc@usmc-mccs.org)
 
@@ -40,12 +40,13 @@ my (
 my ( $db_success1, $db_success2, $ftp_success ) = 0;
 my $hostname = hostname;
 
-if ($opt_t) {
-    if ( $hostname eq 'drlin057' ) {
-        print "Wrong server was used. Hostname: $hostname\n";
-        die;
-    }
-}
+#TODO remember to check on this with Larry as to whether this code will run on 0010 or drlin057
+# if ($opt_t) {
+#     if ( $hostname eq 'drlin057' ) {
+#         print "Wrong server was used. Hostname: $hostname\n";
+#         die;
+#     }
+# }
 
 ## Options
 if ($opt_t) {

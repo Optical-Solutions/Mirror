@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 
 ## Author: Chuck(Chunhui) Yu(yuc@usmc-mccs.org)
 

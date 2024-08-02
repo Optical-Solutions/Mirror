@@ -130,9 +130,8 @@ sub invalid_upc
 sub mail_notify
 {
     my ( $cc, $subj, $body ) = @_;
-#TODO change to address below back to rdiusr
     my $m = IBIS::Mail->new(
-        to      => ['kaveh.sari@usmc-mccs.org'],		#1/10/2008 ERS pretty stupid to embed email addresses in a module??!!!
+        to      => ['rdistaff@usmc-mccs.org'],		#1/10/2008 ERS pretty stupid to embed email addresses in a module??!!!
         from    => 'IBIS <ibis@usmc-mccs.org>',
         type    => 'text/html',
         subject => $subj,
