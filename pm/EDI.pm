@@ -5225,6 +5225,7 @@ sub sget_debug {
 sub do_execute {
     my ( $self, $sth, $val_ref ) = @_;
     my $db_op_error;
+    print "line 5228 " . join (", ",@$val_ref). "\n";
     eval { $sth->execute(@$val_ref); };
     if ($@) {
         push( @$db_op_error, $@ );
