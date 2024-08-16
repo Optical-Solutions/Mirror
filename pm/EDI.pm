@@ -240,8 +240,6 @@ sub confirm_sent_POs {
         }
     }
     $list =~ s/\,$//g;    #remove the last ','
-    #TODO remove next line
-    print "line 243  " . $list . "\n";
 ##
 ## check ept
     my $query1 = "
@@ -275,8 +273,6 @@ and ride_processed_fin_date is not null";
     ##print Dumper($result_ref);
 
 ## analysis on the result:
-#TODO remvoe this line 2771248,2771249,2770998 perl mame -t -d -l 771248,2771249,2770998
-#TODO remove this line 770998
     foreach my $po_id ( keys %$result_ref ) {
         ## 4 cases
         if (   $result_ref->{$po_id}->{'ept'} eq 'Y'
