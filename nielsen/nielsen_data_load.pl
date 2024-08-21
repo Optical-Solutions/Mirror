@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 # Compliance Management Solution
 use strict;
 use MCCS::Nielsen::Util;

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 use strict;
 use Data::Dumper;
 use Time::localtime;

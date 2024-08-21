@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 #---------------------------------------------------------------------
 # Program    : rdc_rms_daily_inv_var_rep
 # Author     : Hanny Januarius
