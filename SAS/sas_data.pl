@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 # SAS Planning and Assortment data
 use strict;
 use MCCS::SAS::Util; 

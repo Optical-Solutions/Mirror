@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 #---------------------------------------------------------------------
 # Program    : "schedules_with_no_parameters_report.pl"
 # Author     : Hanny Januarius
