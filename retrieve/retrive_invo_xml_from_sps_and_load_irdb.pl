@@ -1,5 +1,4 @@
-#!/usr/bin/perl
-
+#!/usr/local/mccs/perl/bin/perl
 #  AUTHOR:  Chunhui YU, <yuc@usmc-mccs.org|chunhui_at_tigr@yahoo.org>
 #  CREATED: Feb 19, 2009
 #  Modified to use Net::SFTP::Foreign package, June 2015  Chunhui Yu
