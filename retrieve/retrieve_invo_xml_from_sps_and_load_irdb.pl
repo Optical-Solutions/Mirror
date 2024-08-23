@@ -77,7 +77,9 @@ $archive_dir = $edi->{INVO_XARCHIVE_DIR};
 
 ## 1: FTP retrive files into the staging directory: NOTE, set NON-deleting mode after retriving files
 if ( ($remote_retrive_dir) && ($staging_dir) ) {
-    &get_ftp_files_in_dir( $remote_retrive_dir, $staging_dir, 0 );
+    #TODO placing test file in staging direcoty as test, delete comment next line.
+    #&get_ftp_files_in_dir( $remote_retrive_dir, $staging_dir, 0 );
+    print "line 82\n";
 }
 else {
     $err_msg .= "Remote Retrive directory or Staging directory value are missing";
@@ -103,10 +105,10 @@ while ( defined( $file = readdir(DIR) ) ) {
         my $filename         = $staging_dir . "/" . $file;
         my $reposit_filename = $archive_dir . "/" . $file;
         my $result;
+        #TODO Added -d to call to XML below for debugging.
         my $cmd =
-            "perl /usr/local/mccs/lib/perl5/IBIS/EDI_TWM/bin/load_one_invoice_xml.pl -f $filename";
-        #TODO uncomment next line.
-        # eval { system($cmd); };
+            "perl /usr/local/mccs/lib/perl5/IBIS/EDI_TWM/bin/load_one_invoice_xml.pl -d -f $filename";
+         eval { system($cmd); };
     }
 }
 close DIR;
