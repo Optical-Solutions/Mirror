@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/mccs/perl/bin/perl
 use warnings;
 use strict;
 use Getopt::Std;
@@ -9,6 +9,7 @@ use File::Copy;
 use Sys::Hostname;
 use POSIX qw(strftime WNOHANG);
 use lib qw (/usr/local/mccs/lib/perl5/IBIS);
+use lib qw (/usr/local/mccs/pm/IBIS);
 use EDI_TWM::Invoice;
 use EDI_TWM::EDI_PARSER;
 use EDI_TWM::LINE_ITEM::LineItem;
@@ -301,9 +302,10 @@ sub send_mail {
     my $emails;
 
     $emails = {
-        rdiusr      => 'rdistaff@usmc-mccs.org',
-        Reggie      => 'Reggett.Lawrence@usmc-mccs.org',
-        rms_analyst => 'rms-analyst@usmc-mccs.org'
+        rdiusr       => 'kaveh.sari@usmc-mccs.org'
+        #rdiusr      => 'rdistaff@usmc-mccs.org',
+        #Reggie      => 'Reggett.Lawrence@usmc-mccs.org',
+        #rms_analyst => 'rms-analyst@usmc-mccs.org'
     };
     my $host = `hostname`;
 
