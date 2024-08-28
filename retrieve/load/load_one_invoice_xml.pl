@@ -53,7 +53,7 @@ sub my_main {
             exit();
         }
     }
-
+    
     # Object
     $invoice_obj = EDI_TWM::Invoice->new( conf_file => $config );
 ## connect to db:
@@ -94,7 +94,6 @@ sub my_main {
     my $data_ref2 = $invoice_obj->_parse_invoice_xml($xmlfile);
     print Dumper($data_ref2) if ($debug);
     $invoice_obj->{'parsed_xml'} = $invoice_obj->_parse_invoice_xml($xmlfile);
-    print "line 97 \n";
 ## use the parsed data to create an object
     $invoice_obj->_invoice_obj_loader($data_ref2);
 
@@ -300,12 +299,10 @@ sub send_mail {
     my $msg_bod1 = shift;
     my $msg_bod2 = shift || '';
     my $emails;
-    #TODO remove kaveh sari email and uncomment three lines after that.
     $emails = {
-        rdiusr       => 'kaveh.sari@usmc-mccs.org'
-        #rdiusr      => 'rdistaff@usmc-mccs.org',
-        #Reggie      => 'Reggett.Lawrence@usmc-mccs.org',
-        #rms_analyst => 'rms-analyst@usmc-mccs.org'
+        rdiusr      => 'rdistaff@usmc-mccs.org',
+        Reggie      => 'Reggett.Lawrence@usmc-mccs.org',
+        rms_analyst => 'rms-analyst@usmc-mccs.org'
     };
     my $host = `hostname`;
 

@@ -77,9 +77,7 @@ $archive_dir = $edi->{INVO_XARCHIVE_DIR};
 
 ## 1: FTP retrive files into the staging directory: NOTE, set NON-deleting mode after retriving files
 if ( ($remote_retrive_dir) && ($staging_dir) ) {
-    #TODO placing test file in staging direcoty as test, delete comment next line.
-    #&get_ftp_files_in_dir( $remote_retrive_dir, $staging_dir, 0 );
-    print "line 82\n";
+    &get_ftp_files_in_dir( $remote_retrive_dir, $staging_dir, 0 );
 }
 else {
     $err_msg .= "Remote Retrive directory or Staging directory value are missing";
