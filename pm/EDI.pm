@@ -11,7 +11,7 @@ use Data::Dumper;
 use Sys::Hostname;
 use POSIX qw(strftime WNOHANG);
 use IBIS::EmailHtml;
-use Devel::StackTrace;
+
 
 our $debug;
 
@@ -5225,8 +5225,6 @@ sub sget_debug {
 sub do_execute {
     my ( $self, $sth, $val_ref ) = @_;
     my $db_op_error;
-    my $trace = Devel::StackTrace->new;
-    print $trace->as_string; # like carp
     eval { $sth->execute(@$val_ref); };
     if ($@) {
         push( @$db_op_error, $@ );
