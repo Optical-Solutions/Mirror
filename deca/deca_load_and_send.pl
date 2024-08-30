@@ -172,7 +172,9 @@ sub check_day_to_run{
 	    $g_log->info("this is the day to run the process.");
 	}
     }
-    return $is_day_to_run; #Not eq to zero unless it's the first day of the month.
+    #TODO remove next line and uncomment after that.
+    return 1;
+    #return $is_day_to_run;
 }
 
 
