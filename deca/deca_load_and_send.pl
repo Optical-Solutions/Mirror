@@ -303,7 +303,7 @@ sub send_mail_with_attachment {
 
     my $go_mail = MCCS::WMS::Sendmail->new();
     #TODO Remove next line.
-    $go_mail->verboselevel(1);
+    $go_mail->verboseLevel(1);
     my @emails = values( %{$g_report_email} );
     $g_log->info("Sending attachment to:");
     foreach my $e ( sort keys %{$g_report_email} ) {
