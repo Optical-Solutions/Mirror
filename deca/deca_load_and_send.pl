@@ -132,6 +132,7 @@ if ($sftp_error){
                            $output);
 }
 
+print "about to archive $output \n";
 my $mv_cmd = "mv $output  $archive_file";
 my $ret_sys = system($mv_cmd);
 
@@ -172,7 +173,9 @@ sub check_day_to_run{
 	    $g_log->info("this is the day to run the process.");
 	}
     }
-    return $is_day_to_run;
+    #TODO remove next line uncomment after that
+    return 1
+    #return $is_day_to_run;
 }
 
 
@@ -300,7 +303,7 @@ sub send_mail_with_attachment {
     my $file = shift;
 
     my $go_mail = MCCS::WMS::Sendmail->new();
-    #$go_mail->verboseLevel(1);
+    $go_mail->verboseLevel(1);
     my @emails = values( %{$g_report_email} );
     $g_log->info("Sending attachment to:");
     foreach my $e ( sort keys %{$g_report_email} ) {
