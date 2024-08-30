@@ -96,7 +96,7 @@ if($day_to_run){
 my ($good_news, $good_news2, $bad_news, $bad_news2);
 
 ## get data from database into a file
-my $lf_filename   = 'BWMCX'.$day_str.".csv";
+my $lf_filename   = 'BWMCX'.$day_str.".csv";        #Why are we not using the global config file ($g_file_pattern)
 my $output        = $g_stage_dir.$lf_filename;
 my $remote_file   = $g_remote_dir.$lf_filename;
 my $archive_file  = $g_arch_dir.$lf_filename;
@@ -172,7 +172,7 @@ sub check_day_to_run{
 	    $g_log->info("this is the day to run the process.");
 	}
     }
-    return $is_day_to_run;
+    return $is_day_to_run; #Not eq to zero unless it's the first day of the month.
 }
 
 
