@@ -228,20 +228,20 @@ sub get_file {
     my $remote_mtime = get_remote_max_mtime();
     print "remote mtime is $remote_mtime \n";
 
-    # if ( $local_mtime < $remote_mtime ) {
+    if ( $local_mtime < $remote_mtime ) {
      
-    #     $g_log->info("\tMCCSPRCIF is newer");
+        $g_log->info("\tMCCSPRCIF is newer");
 
-    #     $file        = download_file();
-    #     $g_max_mtime = $remote_mtime;
-    #     return $file;
+        $file        = download_file();
+        $g_max_mtime = $remote_mtime;
+        return $file;
 
-    # }
-    # else {
+    }
+    else {
 
-    #     # File is not new/updated, so returns blank.
-    #     return $file;
-    # }
+        # File is not new/updated, so returns blank.
+        return $file;
+    }
 
 }
 
@@ -396,7 +396,7 @@ sub cif_status {
         bcif_type     => ""
     };
 
-    write_bank_ciftracking($g_cif);
+    #write_bank_ciftracking($g_cif);
 
 }
 
@@ -421,7 +421,6 @@ sub my_main {
     $g_log->info("host $g_remote_host on dir $g_remote_dir");
 
     my $g_pr_file = get_file(); # COMMENT THIS IN
-    exit();
     #-------------------------------------------------
     # debug
     # short cut WIP
