@@ -223,7 +223,8 @@ sub set_local_max_mtime {
 sub get_file {
     my $file = "";
     get_remote_file_mtime();
-    # my $local_mtime  = get_local_max_mtime();
+    my $local_mtime  = get_local_max_mtime();
+    print "local mtime is $local_mtime \n";
     # my $remote_mtime = get_remote_max_mtime();
 
 
