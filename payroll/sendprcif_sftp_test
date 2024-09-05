@@ -192,8 +192,8 @@ sub download_file {
     $sftp->die_on_error("Unable to establish SFTP connection to $g_remote_host user rdiusr");
 
     $g_log->info("Download New/update files:");
-    $sftp->get(\"$g_remote_dir/MCCSPRCIF", $g_txfile ) 
-      or fatal_error("Could not sftp get $$g_remote_dir/MCCSPRCIF from $g_remote_host because " . $sftp->error());
+    $sftp->get("$g_remote_dir/MCCSPRCIF", $g_txfile ) 
+      or fatal_error("Could not sftp get $g_remote_dir/MCCSPRCIF from $g_remote_host because " . $sftp->error());
 
     $g_log->info("    MCCSPRCIF OK");
 
