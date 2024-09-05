@@ -225,8 +225,8 @@ sub get_file {
     get_remote_file_mtime();
     my $local_mtime  = get_local_max_mtime();
     print "local mtime is $local_mtime \n";
-    # my $remote_mtime = get_remote_max_mtime();
-
+    my $remote_mtime = get_remote_max_mtime();
+    print "remote mtime is $remote_mtime \n";
 
     # if ( $local_mtime < $remote_mtime ) {
      
