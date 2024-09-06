@@ -233,6 +233,7 @@ sub get_file {
         $g_log->info("\tMCCSPRCIF is newer");
 
         $file        = download_file();
+        print ("file is $file \n");
         $g_max_mtime = $remote_mtime;
         return $file;
 
