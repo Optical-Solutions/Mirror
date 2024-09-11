@@ -5055,7 +5055,7 @@ sub get_sps_ftp_object {
     my $sftp   = Net::SFTP::Foreign->new(
         $self->{REMOTE_SERVER},
         user     => $self->{SFTP_USER},
-        password => $pass,
+        password => $self->{PASSWORD},
         port     => '10022'
     );
     $sftp->die_on_error("Unable to establish SFTP connection ");
