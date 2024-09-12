@@ -79,7 +79,6 @@ if ($debug) {
     print "Remote Dir: $edi->{'REMOTE_DIR'} \nRemote Files:\n";
     print Dumper($rf);
     print "list size: @$rf\n";
-    exit();  #TODO remove
 }
 
 if ( @$rf > 0 ) {
@@ -116,7 +115,7 @@ elsif ( @$rf == 0 ) {
     &email_to_ccstr_pip_dlmt( $edi->{MAIL_CC}, $subject, $msg );
 
 }
-
+exit(); #TODO remove this line
 ## upload to RMS data server from local machine staging directory, no matter when the file fetchedbakup_local_files
 
 if ( !$only_download ) {
