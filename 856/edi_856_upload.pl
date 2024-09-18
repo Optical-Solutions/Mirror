@@ -352,7 +352,7 @@ sub put_files_to_rms_serverNbackup2 {
     my $rms_ftp_user    = $edi->{RMS_SFTP_USER};
 
     my $scp =
-        "scp -r $edi->{FTP_STAGING_DIR}" . '/' . '   '
+        "scp -r -B $edi->{FTP_STAGING_DIR}" . '/' . '   '
       . $rms_ftp_user . '@'
       . $rms_server . ':'
       . $rms_staging_dir . '/';

@@ -1,0 +1,107 @@
+Autocorrected to shouldConversation opened. 1 unread message.
+
+sub get_sps_ftp_object {
+    my ($self) = @_;
+    my $c      = IBIS::Crypt->new();
+    my $sftp   = Net::SFTP::Foreign->new(
+        $self->{REMOTE_SERVER},
+        user     => $self->{SFTP_USER},
+        password => $self->{PASSWORD},
+    );
+    $sftp->die_on_error("Unable to establish SFTP connection ");
+    return $sftp;
+
+--
+
+ 
+
+WORK_DIR = /usr/local/mccs/bin
+
+FTP_STAGING_DIR=/usr/local/mccs/data/edi/ftp/856_inbound
+
+FTP_STAGING_DIR_BKUP=/usr/local/mccs/data/edi/ftp/856_inbound_backup
+
+FTP_NORMALIZE_DIR=/usr/local/mccs/data/normalization/e856
+
+ 
+
+MAIL_TO=rdistaff@usmc-mccs.org
+
+MAIL_CC=yuc@usmc-mccs.org|
+
+##rms-analyst@usmc-mccs.org|yuc@usmc-mccs.org|
+
+MAIL_FROM =rdistaff@usmc-mccs.org
+
+POC=rdistaff@usmc-mccs.org
+
+ 
+
+CONNECT_INSTANCE=rms_p
+
+ 
+
+xxREMOTE_SERVER=ftp.spscommerce.net
+
+xxSFTP_USER=marineexch
+
+xxPASSWORD=U2FsdGVkX19FeB+YCpx36Jt+tRgN9a21gc/m8PT51P0=
+
+ 
+
+REMOTE_SERVER=hqlin056
+
+SFTP_USER=rdiusr
+
+PASSWORD=2UC9ze
+
+REMOTE_DIR=/tmp/856
+
+ 
+
+#RMS_SERVER=draix01.usmc-mccs.org
+
+#RMS_SFTP_USER=rdiusr
+
+##RMS_SFTP_PASSWORD=U2FsdGVkX1+nTh0KqocN6sSDUSjjltTN4I/Yvg/EYLU=
+
+#RMS_SFTP_PASSWORD=U2FsdGVkX18h4dF/lYNOtKCbDnoDYTt+
+
+#RMS_STAGING_DIR=/rmdata/ftp/sps_edi_856
+
+#RMS_BACKUP_DIR=/rmdata/ftp/sps_edi_856backup
+
+ 
+
+RMS_SERVER=hqlin056
+
+RMS_SFTP_USER=rdiusr
+
+RMS_SFTP_PASSWORD=2UC9ze
+
+RMS_STAGING_DIR=/tmp/856/rms
+
+RMS_BACKUP_DIR=/tmp/856/rms/backup
+
+ 
+
+TABLE_856ASN=rdiusr.edi_856_ack
+
+LOG_DIR=/usr/local/mccs/log/edi/edi_856
+
+ 
+
+Thank you  
+
+Kaveh Sari
+
+Merchandising System Support/RDI | Information Technology
+
+Business & Support Services | Headquarters Marine Corps
+
+Email:kaveh.sari@usmc-mccs.org | Dial: 703 888 7534
+
+ 
+
+dawnmaclear@comcast.net. Press tab to insert.
+Page 4 of 12
