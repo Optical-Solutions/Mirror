@@ -115,7 +115,6 @@ elsif ( @$rf == 0 ) {
     &email_to_ccstr_pip_dlmt( $edi->{MAIL_CC}, $subject, $msg );
 
 }
-exit(); #TODO remove this line
 ## upload to RMS data server from local machine staging directory, no matter when the file fetchedbakup_local_files
 
 if ( !$only_download ) {
@@ -352,7 +351,7 @@ sub put_files_to_rms_serverNbackup2 {
     my $rms_ftp_user    = $edi->{RMS_SFTP_USER};
 
     my $scp =
-        "scp -r -B $edi->{FTP_STAGING_DIR}" . '/' . '   '
+        "scp -r  $edi->{FTP_STAGING_DIR}" . '/' . '   '
       . $rms_ftp_user . '@'
       . $rms_server . ':'
       . $rms_staging_dir . '/';
