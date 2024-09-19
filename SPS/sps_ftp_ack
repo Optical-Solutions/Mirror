@@ -81,12 +81,12 @@ sub send_mail {
     # }
   
   #TODO delete remainder up to close bracket.
-        $g_log->debug( "Sent email to kaveh sari";
+        $g_log->debug( "Sent email to kaveh sari");
         $g_log->debug("  Sbj: $msg_sub ");
         $g_log->debug("  $msg_bod1 ");
         $g_log->debug("  $msg_bod2 ");
         open( MAIL, "|/usr/sbin/sendmail -t" );
-        print MAIL "To: " . "kaveh.sari@usmc-mccs.org" . " \n";
+        print MAIL "To: " . "kaveh.sari\@usmc-mccs.org" . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
         print MAIL "Subject: $msg_sub\n";
         print MAIL "\n";
