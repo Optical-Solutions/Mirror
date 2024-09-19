@@ -40,14 +40,14 @@ my $g_long_date     = `date`;
 my $g_host          = `hostname`;
 my @g_error_msg     = ();
 my $g_local_d       = $g_cfg->spscommerce->{LOCAL_DIR};
-my $g_remote_d      = $g_cfg->spscommerce->{REMOTE_DIR};
+my $g_remote_d      = "/tmp/out"; #TODO chanage to $g_cfg->spscommerce->{REMOTE_DIR};
 my $g_emails        = $g_cfg->spscommerce->{EMAILS};
 my $g_database      = $g_cfg->spscommerce->{DBNAME};
-my $g_sftp_h        = $g_cfg->sps_SFTP->{sftp_host};
-my $g_sftp_u        = $g_cfg->sps_SFTP->{sftp_user};
+my $g_sftp_h        = 'hqlin056'; #TODO change to $g_cfg->sps_SFTP->{sftp_host};
+my $g_sftp_u        = 'rdiusr'; #TODO change to $g_cfg->sps_SFTP->{sftp_user};
 my $g_sftp_port     = $g_cfg->sps_SFTP->{sftp_port};
 my $o               = IBIS::Crypt->new();
-my $g_sftp_p        = $o->decrypt( $g_cfg->sps_SFTP->{sftp_pass} );
+my $g_sftp_p        = '2UC0ze'; #TODO change to $o->decrypt( $g_cfg->sps_SFTP->{sftp_pass} );
 
 chomp($g_long_date);
 chomp($g_host);
@@ -60,13 +60,33 @@ sub send_mail {
     my $msg_bod1 = shift;
     my $msg_bod2 = shift || '';
 
-    foreach my $name ( sort keys %{$g_emails} ) {
-        $g_log->debug( "Sent email to $name (" . $g_emails->{$name} . ")" );
+#TODO Uncpomment next line to bracket.
+
+    # foreach my $name ( sort keys %{$g_emails} ) {
+    #     $g_log->debug( "Sent email to $name (" . $g_emails->{$name} . ")" );
+    #     $g_log->debug("  Sbj: $msg_sub ");
+    #     $g_log->debug("  $msg_bod1 ");
+    #     $g_log->debug("  $msg_bod2 ");
+    #     open( MAIL, "|/usr/sbin/sendmail -t" );
+    #     print MAIL "To: " . $g_emails->{$name} . " \n";
+    #     print MAIL "From: rdistaff\@usmc-mccs.org\n";
+    #     print MAIL "Subject: $msg_sub\n";
+    #     print MAIL "\n";
+    #     print MAIL $msg_bod1;
+    #     print MAIL $msg_bod2;
+    #     print MAIL "\n";
+    #     print MAIL "\n";
+    #     close(MAIL);
+    #     $g_log->info("Sent email to $name");
+    # }
+  
+  #TODO delete remainder up to close bracket.
+        $g_log->debug( "Sent email to kaveh sari";
         $g_log->debug("  Sbj: $msg_sub ");
         $g_log->debug("  $msg_bod1 ");
         $g_log->debug("  $msg_bod2 ");
         open( MAIL, "|/usr/sbin/sendmail -t" );
-        print MAIL "To: " . $g_emails->{$name} . " \n";
+        print MAIL "To: " . "kaveh.sari@usmc-mccs.org" . " \n";
         print MAIL "From: rdistaff\@usmc-mccs.org\n";
         print MAIL "Subject: $msg_sub\n";
         print MAIL "\n";
@@ -75,8 +95,8 @@ sub send_mail {
         print MAIL "\n";
         print MAIL "\n";
         close(MAIL);
-        $g_log->info("Sent email to $name");
-    }
+        $g_log->info("Sent email to Kaveh Sari");
+    
 }
 
 #---------------------------------------------------------------------
@@ -233,7 +253,7 @@ sub email_report {
 # Query Database to determine non received records
 #---------------------------------------------------------------------
 sub get_non_received_report {
-    my $dbh = IBIS::DBI->connect(dbname => 'rms_p_force');
+    my $dbh = IBIS::DBI->connect(dbname => 'rms_p'); #TODO change to rms_p_force
     my $sql = qq{
 SELECT DISTINCT c.key_data, 
        substr(c.transaction_data, 19,2) dd, 
