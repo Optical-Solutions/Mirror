@@ -138,9 +138,10 @@ sub get_remote_file_list {
     my $sftp = Net::SFTP::Foreign->new(
         $g_sftp_h,
         user     => $g_sftp_u,
-        password => $g_sftp_p # TODO remove comment reinstate comma,
-        #port     => $g_sftp_port #TODO remove comment
+        password => $g_sftp_p  
     );
+       #TODO remove comment reinstate comma two lines above and restore next line.
+       #port     => $g_sftp_port #TODO remove comment
     $sftp->die_on_error("Unable to establish SFTP connection ");
 
     my $list_ref = $sftp->ls($d);
@@ -457,9 +458,10 @@ sub my_main {
        my $sftp = Net::SFTP::Foreign->new(
         $g_sftp_h,
         user     => $g_sftp_u,
-        password => $g_sftp_p #TODO remove comment reinstate comma,
-        #port     => '10022' #TODO remove comment
+        password => $g_sftp_p 
        );
+       #TODO remove comment reinstate comma two lines above and restore next line.
+        #port     => '10022' #TODO remove comment
        $sftp->die_on_error("Unable to establish SFTP connection ");
 
        # $downloaded_file_list = IBIS::FTP->new( { 
