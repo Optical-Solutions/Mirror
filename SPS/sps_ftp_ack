@@ -47,7 +47,7 @@ my $g_sftp_h        = 'hqlin056'; #TODO change to $g_cfg->sps_SFTP->{sftp_host};
 my $g_sftp_u        = 'rdiusr'; #TODO change to $g_cfg->sps_SFTP->{sftp_user};
 my $g_sftp_port     = $g_cfg->sps_SFTP->{sftp_port};
 my $o               = IBIS::Crypt->new();
-my $g_sftp_p        = '2UC0ze'; #TODO change to $o->decrypt( $g_cfg->sps_SFTP->{sftp_pass} );
+my $g_sftp_p        = '2UC9ze'; #TODO change to $o->decrypt( $g_cfg->sps_SFTP->{sftp_pass} );
 
 chomp($g_long_date);
 chomp($g_host);
