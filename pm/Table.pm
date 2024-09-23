@@ -128,7 +128,7 @@ sub store_file {
     my $filename     = shift || $self->_croak('Must supply storable filename.');
     my $data_file    = $self->{data_d} . '/' . $filename;
     my $table_column = $self->{data_d} . '/' . $filename . '_cols';
-print ("data file is $data_file \n");
+print ("data file is $data_file \n"); #TODO remove 2 lines.
 exit;
     unless ( defined( $self->{sql} ) ) {
         $self->_croak("Must setsql('select field from table') first!");

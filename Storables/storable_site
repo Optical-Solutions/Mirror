@@ -45,7 +45,7 @@ my $g_emails = $g_cfg->storable->{emails};  #TODO
 print Dumper $g_emails if $DEBUG;
 
 #- Global variables --------------------------------------------------
-my $g_verbose = 0;
+my $g_verbose = 1;  #TODO reset to 0
 Readonly my $g_logfile => '/usr/local/mccs/log/PriceChanges/' . basename(__FILE__) . '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
