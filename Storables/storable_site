@@ -43,7 +43,7 @@ my $g_cfg = new MCCS::Config;
 my $g_emails = $g_cfg->storable->{emails};  #TODO
 
 print Dumper $g_emails if $DEBUG;
-exit;
+
 #- Global variables --------------------------------------------------
 my $g_verbose = 0;
 Readonly my $g_logfile => '/usr/local/mccs/log/PriceChanges/' . basename(__FILE__) . '.log';
