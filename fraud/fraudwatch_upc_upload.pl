@@ -37,7 +37,7 @@ Readonly::Scalar my $MAIL_FROM => 'IBIS FraudWatch Processor';
 ##ERS 11/30/2009 New server and transfer for fraudwatch
 #TODO uncomment next line and delete after that.
 #Readonly my $FW_HOST  => 'hqw2k3svr17.windows.usmc-mccs.org';
-Readonly my $FW_HOST  => 'hqlin056';
+Readonly my $FW_HOST  => 'hqlin056.usmc-mccs.org';
 Readonly my $FW_DIR   => '.';
 Readonly my $FW_USER  => 'rdiusr';
 Readonly my $WORKDIR  => '/usr/local/mccs/data/fraudwatch/upload';
