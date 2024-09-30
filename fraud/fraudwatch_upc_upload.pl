@@ -217,7 +217,9 @@ if ( !$NOSEND) {
     my $out_file = basename("$skufile.zip");
 
     $log->info("SCP $skufile.zip to $FW_HOST :: $out_file");
-
+    #TODO delete next two lines
+    print ("$out_file");
+    exit;
     if ( !$scp->scp_put( "$skufile.zip", $out_file ) ) {
         send_notify( "SKU file copy failed: " . join( ' ', $scp->error ) );
     } else {
