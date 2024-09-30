@@ -169,7 +169,7 @@ sub _zconnect {
    } else {
 
 	my $pub_key = $self->{'public_ssh_key'} || '/home/'. $self->{'user'} .'/.ssh/id_ecdsa.pub';
-	my $priv_key = $self->{'private_ssh_key'} || '/home/'. $self->{'user'} .'/.ssh/id_dsa';
+	my $priv_key = $self->{'private_ssh_key'} || '/home/'. $self->{'user'} .'/.ssh/id_ecdsa';
 
 	#my $pub_key = $self->{'public_ssh_key'} || '/home/'. $self->{'user'} .'/.ssh/id_rsa.pub';
 	#my $priv_key = $self->{'private_ssh_key'} || '/home/'. $self->{'user'} .'/.ssh/id_rsa';
