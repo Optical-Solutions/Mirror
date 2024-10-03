@@ -171,9 +171,9 @@ if($sftp_success){
     
     my $reslt_msg2  = '';
     if($ret2){
-	$reslt_msg = "Some trouble to scp file to $scp_user_host2";
+	$reslt_msg2 = "Some trouble to scp file to $scp_user_host2";
     }else{
-	$reslt_msg = "SCP success for  $scp_user_host2.";	
+	$reslt_msg2 = "SCP success for  $scp_user_host2.";	
     }
     $tms->{'log_obj'}->log_info($reslt_msg2);
 }else{ 
