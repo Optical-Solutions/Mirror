@@ -28,16 +28,12 @@ use IBIS::Mail;
 use English qw(-no_match_vars);
 use version; our $VERSION = qv('1.0.0');
 
-#TODO uncomment next line and delete line after.
-#Readonly::Scalar my $MAIL_TO => 'rdistaff@usmc-mccs.org';
-Readonly::Scalar my $MAIL_TO => 'kaveh.sari@usmc-mccs.org';
+Readonly::Scalar my $MAIL_TO => 'rdistaff@usmc-mccs.org';
 
 Readonly::Scalar my $MAIL_FROM => 'IBIS FraudWatch Processor';
 
 ##ERS 11/30/2009 New server and transfer for fraudwatch
-#TODO uncomment next line and delete after that.
-#Readonly my $FW_HOST  => 'hqw2k3svr17.windows.usmc-mccs.org';
-Readonly my $FW_HOST  => 'hqlin056.usmc-mccs.org';
+Readonly my $FW_HOST  => 'hqw2k3svr17.windows.usmc-mccs.org';
 Readonly my $FW_DIR   => '.';
 Readonly my $FW_USER  => 'rdiusr';
 Readonly my $WORKDIR  => '/usr/local/mccs/data/fraudwatch/upload';
@@ -217,9 +213,7 @@ if ( !$NOSEND) {
     my $out_file = basename("$skufile.zip");
 
     $log->info("SCP $skufile.zip to $FW_HOST :: $out_file");
-    #TODO delete next two lines
-    print ("$out_file");
-    exit;
+
     if ( !$scp->scp_put( "$skufile.zip", $out_file ) ) {
         send_notify( "SKU file copy failed: " . join( ' ', $scp->error ) );
     } else {
