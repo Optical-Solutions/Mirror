@@ -60,7 +60,8 @@ if($e856->is_debug()){
 
 ## Fetching loading logs:
 my $ret = $e856->scp_856_loading_logs();
-
+print "$ret \n";
+exit;
 ## If fetching log success:
 unless($ret){
     ## get ASN file name list from the log
