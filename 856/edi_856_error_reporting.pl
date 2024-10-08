@@ -60,29 +60,31 @@ if($e856->is_debug()){
 
 ## Fetching loading logs:
 my $ret = $e856->scp_856_loading_logs();
-print "$ret \n";
-exit;
 ## If fetching log success:
 unless($ret){
     ## get ASN file name list from the log
     my $asn_list = $e856->get_filenames_from_logs();
     if($asn_list){
 	
-	## if ANS list, then process each 
-	$e856->parse_asns();
-	print Dumper($e856) if($e856->is_debug);
-	
-	## If report info extracted from parsed asns, sending report
-	my $ary_ref = $e856->collect_reporting_items();
+        ## if ANS list, then process each 
+        $e856->parse_asns();
+        print Dumper($e856) if($e856->is_debug);
+        
+        ## If report info extracted from parsed asns, sending report
+        my $ary_ref = $e856->collect_reporting_items();
 
-	if($ary_ref){
-	    my $th_str ='Asn_name|Vendor_id|PO|Error_msg|Log_name|';
-	    my $subject =  '856 Invalid Vendors (part1)';
-	    my $content = $e856->html_table_via_sth_or_aryref($ary_ref,$th_str,$subject,35);
-	    $e856->send_html_by_email($subject, $e856->{MAIL_CC}, $content);
-	    ##$e856->send_report();
-	}
-	print Dumper($e856) if($e856->is_debug);
+        if($ary_ref){
+            my $th_str ='Asn_name|Vendor_id|PO|Error_msg|Log_name|';
+            my $subject =  '856 Invalid Vendors (part1)';
+            my $content = $e856->html_table_via_sth_or_aryref($ary_ref,$th_str,$subject,35);
+            #TODO remove fixed email, and uncomment next line , restore mail_cc line.
+            $e856->send_html_by_email($subject, 
+            'kaveh.sari@usmc-mccs.org'
+            #$e856->{MAIL_CC}, 
+            $content);
+            ##$e856->send_report();
+        }
+        print Dumper($e856) if($e856->is_debug);
 	
     }else{
 	my $msg ="Uploading Log do not record any ASN loading Errors";
