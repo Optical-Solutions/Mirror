@@ -1,0 +1,64 @@
+11,14d10
+< #Ported by:  Kaveh Sari
+< # Date:  Thursday, May 16th, 2024
+< # DESC / Update:
+< # 
+23,24c19
+< use IBIS::Mail;
+< # use IBIS::Email;
+---
+> use IBIS::Email;
+69,72c64,65
+<     #TODO remove 1 or from logic
+<     if(1 or $ret_ref->[0][0] > 0){
+< 	#TODO remove 	
+< 	$wms->{'log_obj'}->log_info("we found a record vow\n");	
+---
+>     
+>     if($ret_ref->[0][0] > 0){
+76,78c69
+< 	#TODO uncomment next line, delete the line after that.
+< 	#$to    ='yuc@usmc-mccs.org';
+< 	$to    ='kaveh.sari@usmc-mccs.org';
+---
+> 	$to    ='yuc@usmc-mccs.org';
+83,85c74
+< 	#sendmail($from,$to,$subject, $content);  
+< 	notify($from,$to,$subject, $content);
+< 	
+---
+> 	sendmail($from,$to,$subject, $content);  
+87,88c76,77
+<     #TODO remove 1 or from logic
+<     if(1 or $ret_ref->[0][0] > 0){
+---
+> 
+>     if($ret_ref->[0][0] > 0){
+91,93c80
+< 	#TODO uncomment next line, delete line after that.
+< 	#my $drop_table = "drop table temp_edi_850_po_reserved";
+< 	my $drop_table = "drop table temp_edi_850_po_reserved1";
+---
+> 	my $drop_table = "drop table temp_edi_850_po_reserved";
+95,97c82
+< 	#TODO uncomment next line, delete line after that.
+< 	#my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
+< 	my $copy_table = "create table temp_edi_850_po_reserved1 as (select * from edi_850_po_reserved) ";
+---
+> 	my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
+133,144d117
+< sub notify {
+< 	my ($from,$to,$subject, $content) = @_;
+<     my $m = IBIS::Mail->new(
+<         #TODO, remove line with kaveh sari, and uncomment next line.
+<         #to      => [ 'rdistaff@usmc-mccs.org' ],
+<         to      =>  [$to ],
+<         from    => $from,
+<         subject => $subject,
+<         body    => $content
+<     );
+< 
+<     $m->send( );
+146,147d118
+< 
+< }

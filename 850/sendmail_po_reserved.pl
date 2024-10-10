@@ -10,9 +10,10 @@
 #---------------------------------------------------
 #Ported by:  Kaveh Sari
 # Date:  Thursday, May 16th, 2024
-# Removed #TODO tags and stored to required functionality.  Date: Thursday, October 10, 2024 1:50:40 PM
-# DESC / Update:
-# 
+# Updated by Kaveh Sari 
+# Porting Complete  October 10, 2024 1:50:40 PM
+# Restored to required functionality. 
+
 use strict;
 use IBIS::DBI;
 use Data::Dumper;

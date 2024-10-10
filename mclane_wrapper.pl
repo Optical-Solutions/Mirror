@@ -18,6 +18,9 @@
 #	      Since the system command was calling Perl as an executable, the 
 #	      fully "pathed" version of this statement will invoke the desired version
 #	      of PERL.
+# Updated by Kaveh Sari 
+#         Porting Complete:  October 10, 2024 2:35:30 PM
+#         Restored to required functionality.  
 # --------------------------------------------------------------------------   
 
 use strict;
@@ -55,8 +58,7 @@ $g_pstaging_dir         = $g_cfg->MCLANE_COST->{pre_staging_dir};
 $g_staging_dir          = $g_cfg->MCLANE_COST->{staging_dir};
 $g_db_name              =  $g_cfg->MCLANE_COST->{db_name};
 my $dbh = IBIS::DBI->connect( dbname => $g_db_name, attribs => { AutoCommit=> 0 } );
-#$g_report_email         = $g_cfg->MCLANE_COST->{tech_emails};
-$g_report_email->{kav}  = 'kaveh.sari@usmc-mccs.org';
+$g_report_email         = $g_cfg->MCLANE_COST->{tech_emails};
 $g_rpt_dir              = $g_cfg->MCLANE_COST->{rpt_dir} . $day_d;
 unless( -s $g_rpt_dir){
     my $mk_cmd ="mkdir -p $g_rpt_dir";

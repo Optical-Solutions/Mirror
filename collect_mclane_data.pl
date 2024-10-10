@@ -12,6 +12,9 @@
 #   SFTP file to MCL
 # Updated by:  Kaveh Sari 4/12/2024
 # Ensured directories persent, updated email to Kav ONLY.  
+# Updated by Kaveh Sari 
+# Porting Complete  October 10, 2024 1:50:40 PM
+# Restored to required functionality.  
 #------------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -50,8 +53,7 @@ my $g_cfg = new MCCS::Config;
 ### CREATE THESE CONFIGURATION ENTRIES IN IBISCFG.XML FOR MCLANE
 
 my $g_NumOfDays = $g_cfg->mcl_DATA->{NumOfDays};
-#my $g_emails = $g_cfg->mcl_DATA->{emails};
-my $g_emails->{kav}  = 'kaveh.sari@usmc-mccs.org';
+my $g_emails = $g_cfg->mcl_DATA->{emails};
 my $g_email_sub = $g_cfg->mcl_DATA->{email_sub};
 ( my $g_mclFile = $g_cfg->mcl_DATA->{FILE_TO_PRODUCE} ) =~ s/YYYYMMDD/my $x = `date +%Y%m%d`; chomp $x; $x/e;
   

@@ -1,4 +1,8 @@
 #!/usr/local/mccs/perl/bin/perl
+# Updated by Kaveh Sari 
+#         Porting Complete:  October 10, 2024 2:48:00 PM
+#         Added a debug flag to print to screen when logging occurs.
+#         Restored to required functionality, by removing test email from kaveh sari to config.
 use strict;
 use IBIS::DBI;
 use DateTime;
@@ -73,8 +77,7 @@ $g_rpt_dir         = $g_cfg->MCLANE_COST->{rpt_dir};
 #$g_rpt_stg_dir     ='/usr/local/mccs/data/mclane_cost/rpt_stage/'; #Changed
 $g_rpt_stg_dir     =$g_cfg->MCLANE_COST->{rpt_stage};               #change
 $g_archive_dir     = $g_cfg->MCLANE_COST->{archive_dir};
-#$g_report_email    = $g_cfg->MCLANE_COST->{tech_emails};
-$g_report_email->{kav}  = 'kaveh.sari@usmc-mccs.org';
+$g_report_email    = $g_cfg->MCLANE_COST->{tech_emails};
 my $options = (GetOptions(  #ChangekS / Add
 	'debug'      => \$debug,
 	)
