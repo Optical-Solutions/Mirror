@@ -10,6 +10,7 @@
 #---------------------------------------------------
 #Ported by:  Kaveh Sari
 # Date:  Thursday, May 16th, 2024
+# Removed #TODO tags and stored to required functionality.  Date: Thursday, October 10, 2024 1:50:40 PM
 # DESC / Update:
 # 
 use strict;
@@ -21,7 +22,7 @@ use IBIS::EWMS;
 use POSIX qw(strftime WNOHANG);
 use IBIS::Log::File;
 use IBIS::Mail;
-# use IBIS::Email;
+# use IBIS::Email;  #No longer need sendmail.
 my ($debug, @errors);
 
 ## config file, object, db connections
@@ -66,35 +67,25 @@ $wms->destructor();
 sub check_edi_850_po_reserved{
     my $query = "select count(*) from rdiusr.edi_850_po_reserved";
     my $ret_ref = $dbh->selectall_arrayref($query);
-    #TODO remove 1 or from logic
-    if(1 or $ret_ref->[0][0] > 0){
-	#TODO remove 	
-	$wms->{'log_obj'}->log_info("we found a record vow\n");	
+    if($ret_ref->[0][0] > 0){
 	## SEND EMAIL:
 	my ($from, $to, $subject, $content);
 	$from ='rdistaff@usmc-mccs.org';
-	#TODO uncomment next line, delete the line after that.
-	#$to    ='yuc@usmc-mccs.org';
-	$to    ='kaveh.sari@usmc-mccs.org';
+	$to    ='yuc@usmc-mccs.org';
 	$subject ="Warning: edi_850_po_reserved not empty!";
 	$content ="\n\n\nNeed to check on 850 log. \nTotal rows:".$ret_ref->[0][0].
                   "\ndelete from rdiusr.edi_850_po_reserved\n";
 	$wms->{'log_obj'}->info($subject . $content);
 	#sendmail($from,$to,$subject, $content);  
+	#We replaced sendmail with notify(defined below) as sendmail was nonfunctional.
 	notify($from,$to,$subject, $content);
-	
     }
-    #TODO remove 1 or from logic
-    if(1 or $ret_ref->[0][0] > 0){
+    if($ret_ref->[0][0] > 0){
         ## manage data in edi_850_po_reserved:      
        ## DROP TABLE
-	#TODO uncomment next line, delete line after that.
-	#my $drop_table = "drop table temp_edi_850_po_reserved";
-	my $drop_table = "drop table temp_edi_850_po_reserved1";
+	my $drop_table = "drop table temp_edi_850_po_reserved";
 	## COPY DATA TO THE NEW TABLE
-	#TODO uncomment next line, delete line after that.
-	#my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
-	my $copy_table = "create table temp_edi_850_po_reserved1 as (select * from edi_850_po_reserved) ";
+	my $copy_table = "create table temp_edi_850_po_reserved as (select * from edi_850_po_reserved) ";
 	## DELETE THE OLD DATA
 	my $truncate = "truncate table edi_850_po_reserved";
 
@@ -133,8 +124,7 @@ sub check_edi_850_po_reserved{
 sub notify {
 	my ($from,$to,$subject, $content) = @_;
     my $m = IBIS::Mail->new(
-        #TODO, remove line with kaveh sari, and uncomment next line.
-        #to      => [ 'rdistaff@usmc-mccs.org' ],
+        to      => [ 'rdistaff@usmc-mccs.org' ],
         to      =>  [$to ],
         from    => $from,
         subject => $subject,

@@ -1,0 +1,114 @@
+mclane/Mirror/856/edi_856_error_reporting.pl:my $ret = $e856->scp_856_loading_logs();
+mclane/Mirror/856/edi_856_upload.pl:    my $scp =
+mclane/Mirror/856/edi_856_upload.pl:        "scp -r  $edi->{FTP_STAGING_DIR}" . '/' . '   '
+mclane/Mirror/856/edi_856_upload.pl:    my $s_ret = system($scp);
+mclane/Mirror/856/edi_856_upload.pl:	$edi->{'log_obj'}->log_info("scp system return:".$s_ret);
+mclane/Mirror/SAS/SQL/additionalSQL/P_NEW_VERSION.sql:	-- Check if the proc is running for future versioins(directly from SCP) or historic versions(during activation)
+mclane/Mirror/SAS/SQL/additionalSQL/P_NEW_VERSION.sql:		-- if failed to reset this SCP runs into errors
+mclane/Mirror/SAS/SQL/additionalSQL/P_NEW_VERSION.sql:		-- SCP needs this to be set
+mclane/Mirror/SAS/SQL/additionalSQL/P_NEW_VERSION.sql:		-- SCP needs this to be set
+mclane/Mirror/deca/deca_load_and_send.pl:    my $msg = "Warning: scp failed:".$cmd;
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:#Chnged the program to accept a -n option which will prevent SCP.
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:##use Net::SCP;
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:my $NOSEND = 0; #Added NOSEND option used to suppress SCP.
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:#Added No SCP option.
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:#Added No SCP option.
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:#Added No Send option for scp.
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    my $scp = $sshobj->connect( user => $FW_USER, host => $FW_HOST );
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    if ( $@ || !$scp ) {
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:        my $mess = $scp ? join( ' ', $scp->error ) : $!;
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:        send_notify("SCP login failed:: $@. Login error:$mess.");
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    $log->info("SCP $skufile.zip to $FW_HOST :: $out_file");
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    if ( !$scp->scp_put( "$skufile.zip", $out_file ) ) {
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:        send_notify( "SKU file copy failed: " . join( ' ', $scp->error ) );
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:        $log->info("SCP OK to $FW_HOST");
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    if ( !$scp->scp_put( $donefile, basename($donefile) ) ) {
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:        send_notify( "File copy failed: $@. SCP error: " . join( ' ', $scp->error ) );
+mclane/Mirror/fraud/fraudwatch_upc_upload.pl:    use Net::SCP;
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:my $scp_user_host    = $tms->{COGNOS_SERVER_STR};
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    my $scp_cmd = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host\'".":$tms->{COGNOS_INBOUND_DIR}";
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    print "scp command: $scp_cmd\n" if ($debug);
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    my $ret = system($scp_cmd);
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:	$reslt_msg = "some trouble to scp file to $scp_user_host";
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:	$reslt_msg = "SCP success for  $scp_user_host.";
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    my $scp_user_host2 = 'rdiusr@drlin079.usmc-mccs.org';
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    my $scp_cmd2 = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host2\'".":$tms->{COGNOS_INBOUND_DIR}";
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    print "scp command: $scp_cmd2\n" if ($debug);
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:    my $ret2 = system($scp_cmd2);
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:	$reslt_msg2 = "Some trouble to scp file to $scp_user_host2";
+mclane/Mirror/mercurygate/fetch2_mercurygate.pl:	$reslt_msg2 = "SCP success for  $scp_user_host2.";	
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:my $scp_user_host    = $tms->{COGNOS_SERVER_STR};
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    my $scp_cmd = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host\'".":$tms->{COGNOS_INBOUND_DIR}";
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    print "scp command: $scp_cmd\n" if ($debug);
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    my $ret = system($scp_cmd);
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg = "some trouble to scp file to $scp_user_host";
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg = "SCP success for  $scp_user_host.";
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    my $scp_user_host2 = 'rdiusr@drlin079.usmc-mccs.org';
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    my $scp_cmd2 = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host2\'".":$tms->{COGNOS_INBOUND_DIR}";
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    print "scp command: $scp_cmd2\n" if ($debug);
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:    my $ret2 = system($scp_cmd2);
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg2 = "Some trouble to scp file to $scp_user_host2";
+mclane/Mirror/mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg2 = "SCP success for  $scp_user_host2.";	
+mclane/Mirror/pm/E856.pm:sub scp_856_loading_logs{
+mclane/Mirror/pm/E856.pm:    my $scp_cmd =
+mclane/Mirror/pm/E856.pm:	"scp  ".$self->{SFTP_USER}.'@'.$self->{LOG_SERVER}.
+mclane/Mirror/pm/E856.pm:    print "$scp_cmd\n" if $self->is_debug();
+mclane/Mirror/pm/E856.pm:    my $ret = system($scp_cmd);
+mclane/Mirror/pm/SFTP.pm:		    $ret_stat  = $self->{ssh2_obj}->scp_get($rfile_name, $full_files_name); 
+mclane/Mirror/pm/SFTP.pm:		    $put_status = $self->{ssh2_obj}->scp_put($full_files_name, $rfile_name);
+mclane/Mirror/pm/Web_Util.pm:###	my $scp_cmd ="scp $local_file  ".'mcxdata@dev.empowerit.com:'.$remote_file;
+mclane/Mirror/pm/Web_Util.pm:        my $scp_cmd ="scp $local_file  "."$user".'@'."$host".':'.$remote_file; 
+mclane/Mirror/pm/Web_Util.pm:	    system("$scp_cmd");
+mclane/Mirror/pm/Wrapper4claim.pm:sub scp_head_detail_to_fmsserver {
+mclane/Mirror/pm/Wrapper4claim.pm:    my $scp_cmd =
+mclane/Mirror/pm/Wrapper4claim.pm:        'scp -q /usr/local/mccs/data/genex/ap/source/*CL_*.DAT rdiusr@'.$server.':/usr/local/mccs/data/axsone/input/PO_RCV_CL/';
+mclane/Mirror/pm/Wrapper4claim.pm:    my $ret = system($scp_cmd);
+mclane/Mirror/pm/Wrapper4claim.pm:        print "WARNING: scp error happend when copy file to fms";
+mclane/Mirror/sears/get_sears_files.pl:Readonly  my $REMOTE_SCP_USER         => $g_cfg->sears->{remote_scp_user};
+mclane/Mirror/sears/get_sears_files.pl:    my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.$TARGET_SERVER2.':'.$REMOTE_DIR2;
+mclane/Mirror/sears/get_sears_files.pl:     #my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.'hqm04ibisvr0010'.'./tmp';
+mclane/Mirror/streamline/streamline_claim.pl:## 4, scp header, details to FMS..
+mclane/Mirror/streamline/streamline_claim.pl:my $scp_success = 0;
+mclane/Mirror/streamline/streamline_claim.pl:    $scp_success =  $wrapper_obj->scp_head_detail_to_fmsserver();
+mclane/Mirror/streamline/streamline_claim.pl:if($scp_success){    
+mclane/Mirror/streamline/streamline_claim.pl:     my $msg ="SCP claim header/detail files failed. Please check scp permission etc...";
+mercurygate/fetch2_mercurygate.pl:my $scp_user_host    = $tms->{COGNOS_SERVER_STR};
+mercurygate/fetch2_mercurygate.pl:    my $scp_cmd = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host\'".":$tms->{COGNOS_INBOUND_DIR}";
+mercurygate/fetch2_mercurygate.pl:    print "scp command: $scp_cmd\n" if ($debug);
+mercurygate/fetch2_mercurygate.pl:    my $ret = system($scp_cmd);
+mercurygate/fetch2_mercurygate.pl:	$reslt_msg = "some trouble to scp file to $scp_user_host";
+mercurygate/fetch2_mercurygate.pl:	$reslt_msg = "SCP success for  $scp_user_host.";
+mercurygate/fetch2_mercurygate.pl:    my $scp_user_host2 = 'rdiusr@drlin079.usmc-mccs.org';
+mercurygate/fetch2_mercurygate.pl:    my $scp_cmd2 = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host2\'".":$tms->{COGNOS_INBOUND_DIR}";
+mercurygate/fetch2_mercurygate.pl:    print "scp command: $scp_cmd2\n" if ($debug);
+mercurygate/fetch2_mercurygate.pl:    my $ret2 = system($scp_cmd2);
+mercurygate/fetch2_mercurygate.pl:	$reslt_msg2 = "Some trouble to scp file to $scp_user_host2";
+mercurygate/fetch2_mercurygate.pl:	$reslt_msg2 = "SCP success for  $scp_user_host2.";	
+mercurygate/fetch_mercurygate_track_files.pl:my $scp_user_host    = $tms->{COGNOS_SERVER_STR};
+mercurygate/fetch_mercurygate_track_files.pl:    my $scp_cmd = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host\'".":$tms->{COGNOS_INBOUND_DIR}";
+mercurygate/fetch_mercurygate_track_files.pl:    print "scp command: $scp_cmd\n" if ($debug);
+mercurygate/fetch_mercurygate_track_files.pl:    my $ret = system($scp_cmd);
+mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg = "some trouble to scp file to $scp_user_host";
+mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg = "SCP success for  $scp_user_host.";
+mercurygate/fetch_mercurygate_track_files.pl:    my $scp_user_host2 = 'rdiusr@drlin079.usmc-mccs.org';
+mercurygate/fetch_mercurygate_track_files.pl:    my $scp_cmd2 = "scp -p \'$local_ftp_file\'   "."\'$scp_user_host2\'".":$tms->{COGNOS_INBOUND_DIR}";
+mercurygate/fetch_mercurygate_track_files.pl:    print "scp command: $scp_cmd2\n" if ($debug);
+mercurygate/fetch_mercurygate_track_files.pl:    my $ret2 = system($scp_cmd2);
+mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg2 = "Some trouble to scp file to $scp_user_host2";
+mercurygate/fetch_mercurygate_track_files.pl:	$reslt_msg2 = "SCP success for  $scp_user_host2.";	
+mercurygate/screencapture/outputfile:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241001_Track.csv'   'rdiusr@hqlin079.usmc-mccs.org':/tmp/
+mercurygate/screencapture/outputfile:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241001_Track.csv'   'rdiusr@drlin079.usmc-mccs.org':/tmp/
+mercurygate/screencapture/outputfile2:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@hqlin079.usmc-mccs.org':/tmp
+mercurygate/screencapture/outputfile2:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@drlin079.usmc-mccs.org':/tmp
+mercurygate/screencapture/outputfile4:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@hqlin079.usmc-mccs.org':/tmp
+mercurygate/screencapture/outputfile4:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@drlin079.usmc-mccs.org':/tmp
+mercurygate/screencapture/outputfile5:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@hqlin079.usmc-mccs.org':/tmp
+mercurygate/screencapture/outputfile5:scp command: scp -p '/usr/local/mccs/data/mercurygate_tracking/20241002_Track.csv'   'rdiusr@drlin079.usmc-mccs.org':/tmp
+sears/get_sears_files.pl:Readonly  my $REMOTE_SCP_USER         => $g_cfg->sears->{remote_scp_user};
+sears/get_sears_files.pl:    my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.$TARGET_SERVER2.':'.$REMOTE_DIR2;
+sears/get_sears_files.pl:     #my $cmd = "scp -q ".$fp_file."  ". $REMOTE_SCP_USER.'@'.'hqm04ibisvr0010'.'./tmp';
+streamline_claim.pl:## 4, scp header, details to FMS..
+streamline_claim.pl:my $scp_success = 0;
+streamline_claim.pl:    $scp_success =  $wrapper_obj->scp_head_detail_to_fmsserver();
+streamline_claim.pl:if($scp_success){    
+streamline_claim.pl:     my $msg ="SCP claim header/detail files failed. Please check scp permission etc...";
