@@ -179,8 +179,7 @@ EOM
         my $subject = "Duplicate detected on RMS database BAR_CODES table.";
         open( MAIL, "|/usr/sbin/sendmail -t" );
         ## Mail Header
-        #print MAIL "To: " . 'rdistaff@usmc-mccs.org' . "\n";
-        print MAIL "To: " . 'kaveh.sari@usmc-mccs.org' . "\n";
+        print MAIL "To: " . 'rdistaff@usmc-mccs.org' . "\n";
         print MAIL "From: $from\n";
         print MAIL "Subject: $subject\n";
 
