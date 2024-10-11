@@ -1,7 +1,7 @@
 #!/usr/local/mccs/perl/bin/perl
 #---------------------------------------------------------------------
 # Program: 
-# Description: Check duplicate barcode on 832 tables
+# Description: This program will check the sps data server, list new edi 856 files.
 #
 # Updated by Kaveh Sari 
 # Porting Complete  October 11, 2024 1:24:22 PM
