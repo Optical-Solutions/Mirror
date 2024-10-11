@@ -12,6 +12,9 @@
 #Date       :Mon Jul 22 14:49:16 EDT 2024
 #           :Tested the process by copying data files from xxx56 to 0010 and running 
 #           :the same.
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 2:52:44 PM
+# Restored to required original email targets from config files.
 # --------------------------------------------------------------------------     
 
 use strict;
@@ -27,12 +30,13 @@ use IBIS::Log::File;
 use IBIS::Mail;
 use IBIS::DBI;
 use IBIS::SFTP;
+
 Readonly::Scalar my $DATA_DIR         => '/usr/local/mccs/data/rms/cost_load';
 Readonly::Scalar my $REMOTE_DIR       => '/u5/retekdata/prd/rms/mcx/amc';
 Readonly::Scalar my $NEX_VENDOR_ID    => '00001707694';
 Readonly::Scalar my $LOGFILE          => '/usr/local/mccs/log/nexcom/rms_cost_load_special.log';
 Readonly::Scalar my $MAIL_TO          => 'rdistaff@usmc-mccs.org|';
-Readonly::Scalar my $MAIL_CC          => q{kaveh.sari@usmc-mccs.org};
+Readonly::Scalar my $MAIL_CC          => q{};
 Readonly::Scalar my $CONNECT_INSTANCE => 'rms_p';
 Readonly::Scalar my $FTP_CONNECT      => 'nexcom_production';
 
