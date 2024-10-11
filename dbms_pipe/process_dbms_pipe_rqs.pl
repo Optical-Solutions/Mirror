@@ -9,7 +9,7 @@
 
 # Updated by Kaveh Sari 
 # Porting Complete  October 11, 2024 2:27:06 PM
-# Restored to reuired original email targets from config files.
+# Restored to required original email targets from config files.
 #----------------------------------------------------
 
 use strict;
