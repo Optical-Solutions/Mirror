@@ -1,5 +1,12 @@
 #!/usr/local/mccs/perl/bin/perl
-
+#---------------------------------------------------------------------
+# Program: 
+# Description: Check duplicate barcode on 832 tables
+#
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 1:24:22 PM
+# Restored to required functionality.  
+#---------------------------------------------------------------------
 use strict;
 use warnings;
 use IBIS::EDI;
@@ -414,7 +421,6 @@ sub normalize_stg_files {
 
 sub email_to_ccstr_pip_dlmt {
     my ( $cc_str, $subject, $body ) = @_;
-    $cc_str = 'kaveh.sari@usmc-mccs.org|';  #TODO remove this line.
     my @cc_list = split( /\|/, $cc_str );
     foreach my $to_str (@cc_list) {
         if ($to_str) {

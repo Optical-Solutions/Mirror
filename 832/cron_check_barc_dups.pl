@@ -6,7 +6,7 @@
 # Description: Check duplicate barcode on 832 tables
 #
 # Updated by Kaveh Sari 
-# Porting Complete  October 11, 2024 11:39:37 AMM
+# Porting Complete  October 11, 2024 11:39:37 AM
 # Restored to required functionality.  
 #---------------------------------------------------------------------
 use strict;
