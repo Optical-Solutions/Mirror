@@ -3,10 +3,15 @@
 # Ported by: Hanny Januarius
 # Date: Wed Dec  6 14:14:51 EST 2023
 # Desc:
-#       dbms pipe written by Armando
+# dbms pipe written by Armando
 # Ported by: Kaveh Sari, Verified process runs as expected.
 # Date: Tue Jun 25 13:44:13 EDT 2024
+
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 2:27:06 PM
+# Restored to reuired original email targets from config files.
 #----------------------------------------------------
+
 use strict;
 use IBIS::DBI;
 use Net::SMTP;
@@ -35,10 +40,7 @@ unless ( -e $g_log_dir ) {
 my $g_log = IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
 
 my $g_dbname = $g_cfg->wms_global->{DBNAME};
-#TODO uncomment next line, delete the next two after.
-#my $g_emails = $g_cfg->dbms_pipes->{emails};
-my $g_emails;
-$g_emails->{kav}='kaveh.sari@usmc-mccs.org';
+my $g_emails = $g_cfg->dbms_pipes->{emails};
 my $g_dbh = IBIS::DBI->connect( dbname => $g_dbname );
 my $g_cmd = '';
 
