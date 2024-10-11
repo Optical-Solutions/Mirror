@@ -5,6 +5,9 @@
 # Created:  Tue Mar 13 09:46:23 EDT 2012
 # Description: Check duplicate barcode on 832 tables
 #
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 11:39:37 AMM
+# Restored to required functionality.  
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
