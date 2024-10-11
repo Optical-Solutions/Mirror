@@ -17,6 +17,10 @@
 # Added a no send option to this code to allow skipping of sftp process.
 # Created archive directory
 #-----------------------------------------------------------------
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 1:33:23 PM
+# Restored to required functionality.  
+#---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
 use DateTime;
@@ -51,10 +55,7 @@ my $g_verbose = 0;
 my $g_dbh;
 
 my $g_cfg = new MCCS::Config;
-#TODO, uncomment next line, delete the two lines following that
-#my $g_emails = $g_cfg->acv_DATA->{emails};
-my $g_emails;
-$g_emails->{kav} = 'kaveh.sari@usmc-mccs.org';
+my $g_emails = $g_cfg->acv_DATA->{emails};
 
 # Extract file name for Departments List flat file from acv configuration
 my $g_DptList = $g_cfg->acv_DATA->{DEPARTMENTS_FILENAME};
