@@ -15,6 +15,9 @@
 # Ported by:  Kaveh Sari
 # Date:  Thu May 16 15:54:05 EDT 2024
 # DESC: Removed the call to Sendmail and used IBIS::mail instead.
+# Updated by Kaveh Sari 
+# Porting Complete  October 11, 2024 11:45:53 AM
+# Restored to required functionality.  
 use strict;
 use Data::Dumper;
 use IBIS::DBI;
@@ -81,9 +84,7 @@ sub notify {
 
 
     my $m = IBIS::Mail->new(
-        #TODO, remove line with kaveh sari, and uncomment next line.
-        #to      => [ 'rdistaff@usmc-mccs.org' ],
-        to      =>  [ 'kaveh.sari@usmc-mccs.org' ],
+        to      => [ 'rdistaff@usmc-mccs.org' ],
         from    => 'rdistaff@usmc-mccs.org',
         subject => "Warning: Some invoice files did not load!",
         body    => Dumper(\@missed)
