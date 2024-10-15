@@ -43,12 +43,7 @@ flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 
 #- Configuration files -----------------------------------------------
 my $g_cfg     = new MCCS::Config;
-#TODO Made changes to following three lines, 
-#uncomment next line, and delete the two lines afer that.
-#my $g_emails  = $g_cfg->WMS_SKP_RECEIPTS->{emails};
-my $g_emails;  
-$g_emails->{kav} ='kaveh.sari@usmc-mccs.org';
-
+my $g_emails  = $g_cfg->WMS_SKP_RECEIPTS->{emails};
 my $g_dbname = $g_cfg->WMS_SKP_RECEIPTS->{db_name};
 my $g_age_mins = $g_cfg->WMS_SKP_RECEIPTS->{arc_age_mins};
 
