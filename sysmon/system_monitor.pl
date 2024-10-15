@@ -5,7 +5,10 @@
 #
 #Brief Desc: This script is meant to check on the health and status of the 
 #            system and send out notifications if there are any problems.  
-#             
+
+# Updated by Kaveh Sari 
+# Porting Complete  October 15, 2024 1:23:04 PM
+# Restored to required original email targets from config files.            
 #            
 # --------------------------------------------------------------------------  
 
@@ -35,10 +38,8 @@ sub notify {
     my ( $arg_ref ) = @_;
 
     $log->info( $arg_ref->{subject} );
-    #TODO, remove line with kaveh sari, and uncomment next line.
     my $m = IBIS::Mail->new(
-        #to      => [ 'rdistaff@usmc-mccs.org' ],
-        to      =>  [ 'kaveh.sari@usmc-mccs.org' ],
+        to      => [ 'rdistaff@usmc-mccs.org' ],
         cc      => $cc_list,
         from    => "$host <ibis\@usmc-mccs.org>",
         type    => 'text/plain',
