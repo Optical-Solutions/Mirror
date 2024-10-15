@@ -15,6 +15,10 @@
 # Created:  Mon June 26th, 2017
 # Description: Generate/send email with html report showing receipts that are delayed in posting to RMS for 
 # what is considered an abnormal length of time, as set in ibiscfg file
+
+# Updated by Kaveh Sari 
+# Porting Complete  October 15, 2024 11:42:00
+# Restored to required original email targets from config files.
 #---------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
