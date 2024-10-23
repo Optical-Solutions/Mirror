@@ -33,7 +33,7 @@ my $g_emails_rdi = $g_cfg->global_emails->{rdi};
 
 #- Global variables --------------------------------------------------
 
-my $g_verbose = 1; #TODO revert to zero
+my $g_verbose = 0; 
 Readonly my $g_logfile => '/usr/local/mccs/log/832/' . basename(__FILE__) . '.log';
 my $g_long_date = `date +"%D %r"`;
 chomp($g_long_date);
