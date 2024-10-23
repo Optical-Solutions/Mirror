@@ -173,9 +173,7 @@ sub check_day_to_run{
 	    $g_log->info("this is the day to run the process.");
 	}
     }
-    #TODO remove next line uncomment after that
-    return 1
-    #return $is_day_to_run;
+    return $is_day_to_run;
 }
 
 

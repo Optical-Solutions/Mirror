@@ -3,8 +3,6 @@
 ## Author: Chuck(Chunhui) Yu(yuc@usmc-mccs.org)
 ## Ported by:  Kaveh Sari 8/7/2024
 
-#TODO restore EDI.pm and pershaps test_edi_850_to_spscommerce.config to their original versions 
-
 use strict;
 use warnings;
 ##use IBIS::CronOnly;
