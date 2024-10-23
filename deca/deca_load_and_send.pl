@@ -132,7 +132,6 @@ if ($sftp_error){
                            $output);
 }
 
-print "about to archive $output \n";
 my $mv_cmd = "mv $output  $archive_file";
 my $ret_sys = system($mv_cmd);
 
