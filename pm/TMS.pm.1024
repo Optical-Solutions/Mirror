@@ -3,8 +3,6 @@ package IBIS::TMS;
 use strict;
 use Data::Dumper;
 use File::Basename;
-use Net::SFTP::Foreign;
-
 
 sub new {
     my ( $class, %args ) = @_;
@@ -336,7 +334,7 @@ sub check_presence{
 sub sftp_file_from_remote_server {
     my ( $self, $remote_file, $local_file) = @_;
     my $c = IBIS::Crypt->new();
-    my $sftp = Net::SFTP::Foreign->new(
+    my $sftp = Net::SFTP->new(
 	$self->{REMOTE_SERVER},
 	user     => $self->{SFTP_USER},
 	password => $c->decrypt( $self->{PASSWORD} )
@@ -352,59 +350,22 @@ sub sftp_file_from_remote_server {
 }
 
 
-# Added debugging code with 5 log statements.
 sub sftp_list_and_get {
     my ( $self, $remote_file, $local_file, $remote_dir) = @_;
-    $self->{'log_obj'}->log_info('remote file is' . $remote_file . "\n");
-        $self->{'log_obj'}->log_info('local file is' . $local_file . "\n");
-        $self->{'log_obj'}->log_info('remote dir is' . $remote_dir . "\n");
-
-#===============================================================================
-       #NEW
-       my $c = IBIS::Crypt->new();
-       my %arglist;
-       my $sftp;
-       $arglist{user} = $self->{SFTP_USER};
-       $arglist{password} = $c->decrypt($self->{PASSWORD});
-       #$arglist{more}     = '-v';
-eval { $sftp = Net::SFTP::Foreign->new($self->{REMOTE_SERVER}, %arglist ) };
-#===============================================================================
-if ($@){
-    die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
-}
-
-#OLD
-    # my $c = IBIS::Crypt->new();
-    # #TODO uncomment next line, and delete line after that.
-    # #my $sftp = Net::SFTP::Foreign->new(
-    # my $sftp = Net::SFTP->new(
-	# $self->{REMOTE_SERVER},
-	# user     => $self->{SFTP_USER},
-	# password => $c->decrypt( $self->{PASSWORD} )
-	# ) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
-        $self->{'log_obj'}->log_info('sftp user is ' . $self->{SFTP_USER} . "\n");
-        $self->{'log_obj'}->log_info('password is ' . $c->decrypt( $self->{PASSWORD} ) . "\n");
-# ==========================================================================================
-#  # Create an SFTP object
-#  my $sftp = Net::SFTP::Foreign->new($hostname, user => $username, password => $password);
-
-
-#  # Check for errors in creating the SFTP object
-     die "Could not establish SFTP connection: " . $sftp->error unless defined $sftp;
-
-#  # Upload the local file
-     $sftp->put($local_path, $remote_path) or die "Failed to upload file: " . $sftp->error;
-#  ========================================================================================
+    my $c = IBIS::Crypt->new();
+    my $sftp = Net::SFTP->new(
+	$self->{REMOTE_SERVER},
+	user     => $self->{SFTP_USER},
+	password => $c->decrypt( $self->{PASSWORD} )
+	) || die " Can not connect to remote server: $self->{REMOTE_SERVER} !\n";
 
 
   ## take care of possible spaces in the STUPD MercuryGate names  
     my @flist;
     my @flist_ref = $sftp->ls($remote_dir);
     
-    #TODO Printing each file name from a list array.
     foreach my $key(@flist_ref){
 	push(@flist, $key->{'filename'});
-    $self->{'log_obj'}->log_info('file ' . $key->{'filename'} . "\n");
     }
     
     
@@ -412,7 +373,7 @@ if ($@){
     
     my $tmp_msg = "\nbase name: $r_bn\n";
     $self->{'log_obj'}->log_info($tmp_msg);
-            $self->{'log_obj'}->log_info("line 384\n");
+    
 =head
     my @found = grep {/$r_bn/g} @flist; 
     print "found:\n";
@@ -440,17 +401,14 @@ if ($@){
 	    } 
 	}
     }
-
     if(@found ==0){
-
 	$r_bn =~ s/\s+//g; ## remove space:
 	foreach my $file(@flist){
 	    if($r_bn eq $file){
 		push(@found, $r_bn);
-     
 	    }    
 	}
-
+	
 	if(@found){ ## name without space was found:
 	    $remote_file =~ s/\s+//g;
 	    $local_file  =~ s/\s+//g;
@@ -459,19 +417,17 @@ if ($@){
 
 	}
     }
-
+    
 ## with name or without a name, anyways take the front space in names away:
     $local_file =~ s/\s+//g;
-
+    
     my $ftp_result = $sftp->get( $remote_file, $local_file );
-
-    #if ($ftp_result) {  #The sftp get might return a string, and not a boolean
-    if ($ftp_result  eq '') {
+    #if ($ftp_result) {
+    if ($ftp_result eq  '') {
         $self->{'log_obj'}->log_info("\nSFTP successful!\n");
     } else {
         $self->{'log_obj'}->log_info("\nSFTP failed for some reason: $!\n");
     }
-
     return $ftp_result;
 }
 

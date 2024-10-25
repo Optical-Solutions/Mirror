@@ -516,12 +516,12 @@ sub update_nex_retail_load {
     my $last_nex_change_date = $date;
     
     if ($debug) {
-             #TODO remove next line
+             #TODO  Watch whether the QUERY_EXCEPTION COST is missing in db and put put into log as a failure.
              if (defined $estimated_landed_cost){
-    	        $log->log_info("estimated landed cosgt is  $estimated_landed_cost");
+    	        $log->log_info("estimated landed cost is  $estimated_landed_cost");
              }
              else {
-                $log->log_info("estimated landed cosgt is  undef");
+                $log->log_info("estimated landed cost is  undef");
              }
 
         print {$fh}

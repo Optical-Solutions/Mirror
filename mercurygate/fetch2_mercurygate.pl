@@ -112,22 +112,22 @@ eval{
 };
 
 
-if ($@) {
+if ($@ or $sftp_result ne '') {
     sleep(100);
     eval{    
-	## space in file names are stripped off in sftp process:
-	$sftp_result = $tms->sftp_list_and_get($remote_ftp_file,$local_ftp_file, $tms->{REMOTE_OUTBOUND} );
+        ## space in file names are stripped off in sftp process:
+        $sftp_result = $tms->sftp_list_and_get($remote_ftp_file,$local_ftp_file, $tms->{REMOTE_OUTBOUND} );
     };
-    if($@){
-	$sftp_success = 0;
-	my $msg =
-	    "FTP failed in the second attempt.";
-	$tms->{'log_obj'}->log_info($msg);
+    if($@ or $sftp_result ne ''){
+        $sftp_success = 0;
+        my $msg =
+            "FTP failed in the second attempt.";
+        $tms->{'log_obj'}->log_info($msg);
     }else{
-	$sftp_success = 1;
-	my $msg_end =
-	    "FTP sucess in second try! local: $local_ftp_file remote: $remote_ftp_file";
-	$tms->{'log_obj'}->log_info($msg_end);
+        $sftp_success = 1;
+        my $msg_end =
+            "FTP sucess in second try! local: $local_ftp_file remote: $remote_ftp_file";
+        $tms->{'log_obj'}->log_info($msg_end);
     }
 }else {
     $sftp_success = 1;
