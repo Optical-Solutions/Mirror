@@ -252,7 +252,8 @@ END1
 #---------------------------------------------------------------------
 
 # Want to catch warning
-$SIG{__WARN__} = sub { $g_log->warn("@_") };
+
+local $SIG{__WARN__} = sub { $g_log->warn("@_") };
 
 # Execute the main
 eval { my_main() };
