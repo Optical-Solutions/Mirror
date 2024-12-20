@@ -52,9 +52,9 @@ use warnings;
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
 open(my $fh, ">", $lock_file) or die "Could not create lock file $lock_file";
 flock $fh, LOCK_EX | LOCK_NB or die "Another $0 process already running";
-#close $fh;  #TODO Needs verification.
 
-# use Fcntl qw(:flock);
+#Alternatice lock file mechanism.  This uses a file handle on the file itself rather than 
+#an external lock file on the MCCS file system.
 # open(our $lock_file, '<', $0) or die "Unable to Lock $0";
 # flock $lock_file, LOCK_EX|LOCK_NB or die "Another $0 process already running";
 # close $lock_file;  #TODO Needs verification.
