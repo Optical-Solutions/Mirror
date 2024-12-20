@@ -43,6 +43,7 @@ use Fcntl qw(:flock);
 use MCCS::WMS::Sendmail;
 use Getopt::Std;
 use DateTime;
+use warnings;
 
 # Flush output
 $| = 1;
