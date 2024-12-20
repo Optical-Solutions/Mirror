@@ -46,7 +46,7 @@ use DateTime;
 use warnings;
 
 # Flush output
-$| = 1;
+#$| = 1;
 
 #- One process at a time ---------------------------------------------
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
@@ -66,7 +66,7 @@ my $g_cfg = new MCCS::Config;
 my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
 my $g_dbname = $g_cfg->schedules_with_no_parameters_report->{dbname};
 
-print Dumper $g_emails if $DEBUG;
+#print Dumper $g_emails if $DEBUG;
 
 #- Global variables --------------------------------------------------
 my $g_verbose = 0;
