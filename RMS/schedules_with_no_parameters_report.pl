@@ -49,14 +49,14 @@ use warnings;
 #$| = 1;
 
 #- One process at a time ---------------------------------------------
-# my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
-# open(my $fh, ">", $lock_file) or die "Could not create lock file $lock_file";
-# flock $fh, LOCK_EX | LOCK_NB or die "Another $0 process already running";
-# close $fh;  #TODO Needs verification.
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+open(my $fh, ">", $lock_file) or die "Could not create lock file $lock_file";
+flock $fh, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+close $fh;  #TODO Needs verification.
 
-use Fcntl qw(:flock);
-open(our $lock_file, '<', $0) or die "Unable to Lock $0";
-flock $lock_file, LOCK_EX|LOCK_NB or die "Another $0 process already running";
+# use Fcntl qw(:flock);
+# open(our $lock_file, '<', $0) or die "Unable to Lock $0";
+# flock $lock_file, LOCK_EX|LOCK_NB or die "Another $0 process already running";
 # close $lock_file;  #TODO Needs verification.
 
 
