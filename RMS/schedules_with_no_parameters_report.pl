@@ -49,8 +49,8 @@ $| = 1;
 
 #- One process at a time ---------------------------------------------
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
-open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
-flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+open(my $fh, ">", $lock_file) or die "Could not create lock file $lock_file";
+flock $fh, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 
 #- Get option switches -----------------------------------------------
 our %g_opt = (
@@ -136,20 +136,20 @@ ECSS
     #$go_mail->hostName($g_host);
     #$go_mail->send_mail();
     foreach my $user (sort keys %{$g_emails}) {
-    open( MAIL, "|/usr/sbin/sendmail -t" );
-        print MAIL "To: " . $g_emails->{$user} . " \n";
-        print MAIL "From: rdistaff\@usmc-mccs.org\n";
-        print MAIL "Cc: " . $g_emails->{RDI} . " \n";
-        print MAIL "Subject: $msg_sub \n";
-        print MAIL "Content-Type: text/html; charset=ISO-8859-1\n\n"
+    open( my $mail, "-|","/usr/sbin/sendmail -t" );
+        print $mail "To: " . $g_emails->{$user} . " \n";
+        print $mail "From: rdistaff\@usmc-mccs.org\n";
+        print $mail "Cc: " . $g_emails->{RDI} . " \n";
+        print $mail "Subject: $msg_sub \n";
+        print $mail "Content-Type: text/html; charset=ISO-8859-1\n\n"
           . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
-        print MAIL "\n";
-        print MAIL "<br>\n";
-        print MAIL "<br>\n";
-        print MAIL "Server: $g_host\n";
-        print MAIL "\n";
-        print MAIL "\n";
-    close(MAIL);
+        print $mail "\n";
+        print $mail "<br>\n";
+        print $mail "<br>\n";
+        print $mail "Server: $g_host\n";
+        print $mail "\n";
+        print $mail "\n";
+    close($mail);
     }
 
 }
