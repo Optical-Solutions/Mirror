@@ -68,7 +68,7 @@ getopts('d', \%g_opt);
 my $DEBUG = $g_opt{d};
 
 #- Configuration files -----------------------------------------------
-my $g_cfg = new MCCS::Config;
+my $g_cfg = MCCS::Config->new();
 
 my $g_emails = $g_cfg->schedules_with_no_parameters_report->{emails};
 my $g_dbname = $g_cfg->schedules_with_no_parameters_report->{dbname};
