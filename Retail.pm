@@ -22,7 +22,7 @@ sub retail
    );
      while (my $key = shift {
         my $value = shift;
-        $args[$key} = $value;
+        $args{$key} = $value;
         }
         my $ret_value = undef;
    # Retail($) = Cost($) + Markup($)
