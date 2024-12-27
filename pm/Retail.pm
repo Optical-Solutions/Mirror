@@ -20,32 +20,32 @@ sub retail
       markup_dols => undef,
       markup_pct => undef
    );
-     while (my $key = shift {
+
+     while (my $key = shift) {
         my $value = shift;
         $args{$key} = $value;
         }
-        my $ret_value = undef;
+
    # Retail($) = Cost($) + Markup($)
    if (defined $args{cost} && defined $args{markup})
    {
-      $ret_value = $args{cost} + $args{markup};
+      return $args{cost} + $args{markup};
 
    }
    # Retail($) = Cost($) / Cost Complement(%)
    elsif (defined $args{cost} && defined $args{cost_complement})
    {
-      $ret_value = $args{cost} / $args{cost_complement};
+      return $args{cost} / $args{cost_complement};
    }
    # Retail($) = Markup($) / Markup(%)
    elsif (defined $args{markup_dols} && defined $args{markup_pct})
    {
-      $ret_value = $args{markup_dols} / $args{markup_pct};
+      return $args{markup_dols} / $args{markup_pct};
    }
-   if (not(defined  $ret_value)){
+   else
+   {
       croak "No valid parameters passed.";
    }
-   return $ret_value;
-
 }
 
 
@@ -54,10 +54,13 @@ sub cost
    my %args = (
       retail => undef,
       markup => undef,
-      cost_complement => undef,
-      @_
+      cost_complement => undef
    );
 
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Cost($) = Retail($) - Markup($)
    if (defined $args{retail} && defined $args{markup})
    {
@@ -80,10 +83,12 @@ sub markup_dols
    my %args = (
       retail => undef,
       cost => undef,
-      markup => undef,
-      @_
+      markup => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Markup($) = Retail($) - Cost($)
    if (defined $args{retail} && defined $args{cost})
    {
@@ -107,10 +112,12 @@ sub markup_pct
       retail => undef,
       cost => undef,
       markup => undef,
-      cost_complement => undef,
-      @_      
+      cost_complement => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Markup(%) = (Retail($) - Cost($)) / Retail($)
    if (defined $args{retail} && defined $args{cost})
    {
@@ -138,10 +145,12 @@ sub cost_complement
    my %args = (
       markup => undef,
       cost => undef,
-      retail => undef,
-      @_
+      retail => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Cost Complement(%) = 100% - Markup(%)
    if (defined $args{markup})
    {
@@ -165,10 +174,12 @@ sub markdown
       retail => undef,
       new_price => undef,
       net_markdown => undef,
-      net_sales => undef,
-      @_
+      net_sales => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Markdown(%) = (Retail($) - New price($)) / New price($)
    if (defined $args{retail} && defined $args{new_price})
    {
@@ -190,10 +201,12 @@ sub savings
 {
    my %args = (
       retail => undef,
-      new_price => undef,
-      @_
+      new_price => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Savings(%) = (Retail($) - New price($)) / Retail($)
    if (defined $args{retail} && defined $args{new_price})
    {
@@ -210,10 +223,12 @@ sub net_markups
 {
    my %args = (
       gross_markups => undef,
-      markups_cancelled => undef,
-      @_
+      markups_cancelled => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Net Markups($) = Gross Markups($) - Markup Cancellations($)
    if (defined $args{gross_markups} && defined $args{markups_cancelled})
    {
@@ -230,10 +245,12 @@ sub net_markdowns
 {
    my %args = (
       gross_markdowns => undef,
-      markdowns_cancelled => undef,
-      @_
+      markdowns_cancelled => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Net Markdowns($) = Gross Markdowns($) - Markdown Cancellations($)
    if (defined $args{gross_markdowns} && defined $args{markdowns_cancelled})
    {
@@ -250,10 +267,12 @@ sub turnover
 {
    my %args = (
       sales => undef,
-      average_inventory_retail => undef,
-      @_
+      average_inventory_retail => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Turnover = Sales($) / Average Inventory at Retail($)
    if (defined $args{sales} && defined $args{average_inventory_retail})
    {
@@ -273,10 +292,12 @@ sub gross_margin_pct
       net_sales => undef,
       cumulative_markon => undef,
       cost_complement => undef,
-      retail_reductions => undef,
-      @_
+      retail_reductions => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Gross Margin(%) = Gross Margin($) / Net Sales(%)
    if (defined $args{gross_margin} && defined $args{net_sales})
    {
@@ -302,10 +323,12 @@ sub gross_margin_dols
    my %args = (
       net_sales => undef,
       gross_margin => undef,
-      sold_goods_cost => undef,
-      @_
+      sold_goods_cost => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Gross Margin($) = Net Sales($) * Gross Margin(%)
    if (defined $args{net_sales} && defined $args{gross_margin})
    {
@@ -328,10 +351,12 @@ sub retail_reductions
    my %args = (
       markdown => undef,
       employee_discount => undef,
-      shrinkage => undef,
-      @_
+      shrinkage => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Retail Reductions(%) = Markdown(%) + Employee Discount(%) + Shrinkage(%)
    if (defined $args{markdown} && defined $args{employee_discount} &&
        defined $args{shrinkage})
@@ -349,10 +374,12 @@ sub cumulative_markon
 {
    my %args = (
       gross_margin => undef,
-      retail_reductions => undef,
-      @_
+      retail_reductions => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Cumulative Markon(%) = (Gross Margin(%) + Retail Reductions(%)) /
    #                        (100% + Retail Reductions(%))
    if (defined $args{gross_margin} && defined $args{retail_reductions})
@@ -371,10 +398,12 @@ sub gmroi
 {
    my %args = (
       gross_margin => undef,
-      average_inventory_cost => undef,
-      @_
+      average_inventory_cost => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # GMROI = Gross Margin(%) / Average Inventory at Cost($)
    if (defined $args{gross_margin} && defined $args{average_inventory_cost})
    {
@@ -391,10 +420,12 @@ sub stock_shortage
 {
    my %args = (
       stock_shortage => undef,
-      net_sales => undef,
-      @_
+      net_sales => undef
    );
-
+     while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+        }
    # Stock Shortage(%) = Stock Shortage($) / Net Sales($)
    if (defined $args{stock_shortage} && defined $args{net_sales})
    {
