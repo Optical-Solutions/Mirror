@@ -549,7 +549,7 @@ print "OOM:$OOM_sql <br><br>";
             if(($t_cost) && ($t_retail)){
                %totals = (
                     total_cost   => sprintf( '%.2f', $t_cost ),
-                    :otal_retail => sprintf( '%.2f', $t_retail )
+                    total_retail => sprintf( '%.2f', $t_retail )
                 );
             }
         } #end of if qty_on_h
