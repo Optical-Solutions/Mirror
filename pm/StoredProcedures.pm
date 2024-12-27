@@ -116,7 +116,7 @@ sub is_jesta{
 		return ($ret,$res);
         }
 	} else {
-		return undef;
+		return;
 	}
 }
 
