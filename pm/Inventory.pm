@@ -42,7 +42,7 @@ use IBIS::DateTime::Retail;
 use vars qw( @EXPORT_OK );
 
 use base qw(Exporter);
-@EXPORT = qw( style_info 
+@EXPORT_OK = qw( style_info 
               inv_on_date 
               style_details 
               styles_summary
