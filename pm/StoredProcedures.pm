@@ -103,6 +103,7 @@ sub update_inven_move_summary
 sub is_jesta{
 	my ($dbh) = @_;
 	my $st;
+    my $ret;
 	eval{ 
 		$st = $dbh->prepare_cached('SELECT MAX(version_number) max_ver FROM application_build_information');
 	};
@@ -110,10 +111,12 @@ sub is_jesta{
 		$st->execute();
 		my ($res) = $st->fetchrow_array();
 		$st->finish();
-		my $ret = substr($res,0,1) == 9 ? 1 : 0;
-		wantarray() ? ($ret,$res) : $ret;
+		$ret = substr($res,0,1) == 9 ? 1 : 0;
+        if (wantarray()) {
+		return ($ret,$res);
+        }
 	} else {
-		undef;
+		return undef;
 	}
 }
 
