@@ -19,7 +19,11 @@ my $pkg = __PACKAGE__;
 #--------------------------------------------------------------------------
 sub new {
     my $type   = shift;
-    my %params = @_;
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }
     my $self   = {};
 
     bless $self, $type;
@@ -40,7 +44,7 @@ sub new {
         $self->{log} = undef;
     }
 
-    $self->{cfg}    = new MCCS::Config;
+    $self->{cfg}    = MCCS::Config->new();
     $self->{dbname} = $self->{cfg}->wms_global->{DBNAME};   
 
     $self->{dbh} = IBIS::DBI->connect(dbname => $self->{dbname});
