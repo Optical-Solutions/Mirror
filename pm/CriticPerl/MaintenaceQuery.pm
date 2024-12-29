@@ -32,8 +32,11 @@ our (@EXPORT_OK, %EXPORT_TAGS);
 
 sub get_record {
     my $self = shift;
-    my %params = @_;
-        
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }    
     for my $key (keys %params) {
         $self->{$key} = $params{$key} 
     }
@@ -50,8 +53,11 @@ sub get_record {
 
 sub set_record {
     my $self = shift;
-    my %params = @_;
-        
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }    
     for my $key (keys %params) {
         $self->{$key} = $params{$key} 
     }
@@ -137,8 +143,11 @@ return $sql;
 
 sub insert_rdi_close_picks {
     my $self = shift;
-    my %params = @_;
-    
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }
     #the order that the values will be place in the value bind
     @{$self->{ $self->{dataSource}."BindOrder" } } = ('rdc_id', 
                                                        'receipt_id', 
@@ -165,8 +174,11 @@ values (?,?,?,?,?,?,?,?,?,?,?,?,sysdate )
 
 sub update_rdi_close_picks {
     my $self = shift;
-    my %params = @_;
-    
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }
     #the order that the values will be place in the value bind
     @{$self->{ $self->{dataSource}."BindOrder" } } = ( 'status',
                                                        'updated_by',
