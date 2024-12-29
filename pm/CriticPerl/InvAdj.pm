@@ -21,13 +21,17 @@ use IBIS::E832::DB_Utils;
 
 my $pkg                  = __PACKAGE__;
 my $DEBUG                = 0;
-my $g_cfg                = new MCCS::Config;
+my $g_cfg                = MCCS::Config->new();
 my $g_user_support_email = $g_cfg->global_emails->{edi_user_support};
 
 #--------------------------------------------------------------------------
 sub new {
     my $type   = shift;
-    my %params = @_;
+    my %params;
+    while (my $key = shift) {
+        my $value = shift;
+        $params{$key} = $value;
+    }
     my $self   = {};
 
     bless $self, $type;
@@ -551,8 +555,11 @@ sub _build_warning_html {
 #--------------------------------------------------------------------------
 sub _insert_one_record {
     my $self = shift;
-    my %args = ( @_, );    # named parameters
-
+    my %args ;    # named parameters
+    while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+    }
     eval {
         $self->{import_sth}->execute(
             $args{application_user}, $args{line_no}
@@ -579,12 +586,15 @@ sub _insert_one_record {
 #--------------------------------------------------------------------------
 sub _insert_to_table {
     my $self = shift;
-    my %args = ( @_, );    # name parameters
-
+    my %args;    # name parameters
+    while (my $key = shift) {
+        my $value = shift;
+        $args{$key} = $value;
+    }
     my $end_date = $args{end_date};
     $end_date =~ s/\s+//g if defined($end_date);
 
-    my $err_msg .= $self->_insert_one_record(%args);
+    my $err_msg = $self->_insert_one_record(%args);
 
     return $err_msg;
 
