@@ -474,7 +474,7 @@ ENDOFDATA
        # This one is good!
        # There should be no bad records. If any, your checks need improvement.
        #----------------------------------------------------------------------
-            my $msg .= "<br>\n";
+            my $msg = "<br>\n";
             my $good_n = 0;
             my $bad_n  = 0;
             foreach my $rec (@good_records) {
