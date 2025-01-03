@@ -12,7 +12,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
  
  Select
 Po.Po_Id,
@@ -138,8 +138,7 @@ group by Po_Id,  shipped_to_site_id , trans_num) Ipd
 }
 
 sub make_record {
-    my $self = shift;
- my ($PoNumber,  $DeptNumber,  $VendorNumber, $ShipStartDate, $ShipStopDate,
+ my ($self,$PoNumber,  $DeptNumber,  $VendorNumber, $ShipStartDate, $ShipStopDate,
         $PoCreateDate, $OrderType, $ShipToNumber, $OrderStatus, $DistMethod,
         $BillType, $TotalUnitsSign, $TotalUnits, $PoTotalCostSign, $PoTotalCost,
         $Version, $Terms, $RideDate, $CancelDate, $EdiDate, $EventId, $PreTicketFlag,
@@ -177,13 +176,13 @@ sub make_record {
             
         }
       );
-    $obj->to_string();
+    return $obj->to_string();
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_POHeader.dat';
+    return $date . '_POHeader.dat';
 }
 
 

@@ -12,7 +12,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 select 
   hdr.receipt_id,
   to_char(hdr.po_id) po_id,
@@ -90,14 +90,12 @@ rcpt.receipt_type = 'NO PO'
   )
   
 "
-
 ;
 
 }
 
 sub make_record {
-    my $self = shift;
-    my ($ReceiverNumber, $PoNumber,  $UniqueAddenda, $Sku,  $Upc, $LineNumber, 
+    my ($self,$ReceiverNumber, $PoNumber,  $UniqueAddenda, $Sku,  $Upc, $LineNumber, 
         $ItemCostSign,  $ItemCost, $ItemRetailSign, $ItemRetail, $StoreNumber, $StoreCostSign, $StoreCost, 
         $StoreRetailSign, $StoreRetail, $StoreRcvUnitsSign, $StoreRcvUnits,
         $ReceiverCreateDate, $PoUniqueAddenda
@@ -133,7 +131,7 @@ sub make_record {
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_ReceiverDetail.dat';
+    return $date . '_ReceiverDetail.dat';
 }
 
 

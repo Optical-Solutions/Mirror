@@ -70,8 +70,7 @@ return $sql;
 
 
 sub make_record {
-    my $self = shift;
-    my ($processType, $jc_username, $fullname, $creationDate, $updateDate, $receiptId,
+    my ($self,$processType, $jc_username, $fullname, $creationDate, $updateDate, $receiptId,
         $poId, $frustrated, $transferId, $siteId
     ) = @_;
     
