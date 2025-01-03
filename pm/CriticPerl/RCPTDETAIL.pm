@@ -1,5 +1,6 @@
 package MCCS::CMS::Loads::RCPTDETAIL;
 use strict;
+use warnings;
 use base ("MCCS::CMS::Loads::Base");
 use MCCS::CMS::RecordLayout::RcptDetailRecord;
 use MCCS::CMS::DateTime;
@@ -125,7 +126,7 @@ sub make_record {
             PoUniqueAddenda     => $PoUniqueAddenda ? MCCS::CMS::DateTime->new($PoUniqueAddenda) : undef,      
         }
       );
-    $obj->to_string();
+    return $obj->to_string();
 }
 
 sub get_filename {
