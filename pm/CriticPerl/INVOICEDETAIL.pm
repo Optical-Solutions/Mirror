@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self = shift;
 
-"
+return "
  select 
 sub.invoice_number,
 --sub.invoice_date,
@@ -35,12 +35,11 @@ from
 "
 
 ;
-return; 
+
 }
 
 sub make_record {
-    my $self = shift;
-    my ($InvoiceNo,  $InvoiceDate,  $PoNumber, $PoDate,
+    my ($self,$InvoiceNo,  $InvoiceDate,  $PoNumber, $PoDate,
         $BarCode, $Sku, $Qty, $ItemUnit, $UnitCost
     ) = @_;
   
@@ -62,15 +61,15 @@ sub make_record {
                         
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
+    
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_810_Detail.dat';
-    return;
+    return $date . '_810_Detail.dat';
+    
 }
 
 #sub database {
