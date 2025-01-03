@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 Select 
   base.style_id || base.color_id || nvl(lpad(base.size_id,5,'*'),'NOSIZ') || nvl(lpad(base.Dimension_id,5,'*'),'NODIM') sku_key_b ,
   Base.Bar_Code_Id, 
@@ -67,12 +67,11 @@ From
    
 "
 ;
-return;
+
 }
 
 sub make_record {
-    my $self = shift;
-    my ($sku, $barcode, $style_id, $style_desc,$color, $size, $type, $cost_sign, $cost, $retail_sign,
+    my ($self,$sku, $barcode, $style_id, $style_desc,$color, $size, $type, $cost_sign, $cost, $retail_sign,
         $retail, $vendor_style, $dept_id, $class_id, $vendor_id
     ) = @_;
 
@@ -98,15 +97,15 @@ sub make_record {
             Class           => $class_id,
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
+
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_Item.dat';
-    return;
+return $date . '_Item.dat';
+
 }
 
 

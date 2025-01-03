@@ -91,8 +91,8 @@ sub make_record {
            
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
+
 }
 
 sub get_filename {
@@ -103,8 +103,8 @@ sub get_filename {
     my $ts = `date '+%H00'`;
     chomp($date);
     chomp($ts);
-    $date . '_scv_store_'.$ts.'.dat';
-    return;
+    return $date . '_scv_store_'.$ts.'.dat';
+
 }
 
 

@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 Select 
   P.Po_Id, 
   p.Style_Id || p.Color_Id || Nvl(Lpad(p.Size_Id,5,'*'),'NOSIZ') || Nvl(Lpad(p.Dimension_Id,5,'*'),'NODIM') Sku_Key ,
@@ -54,14 +54,12 @@ From
     left join v_po_same_day_cancel sdc on sdc.po_id = hdr.po_id
  where nvl(sdc.CANCELLED_IND, 'N') = 'N'
 "
-
 ;
-return;
+
 }
 
 sub make_record {
-    my $self = shift;
-    my ($PoNumber,  $Sku,  $Upc, $StoreNumber,  $StoreOrdUnitsSign,
+    my ($self,$PoNumber,  $Sku,  $Upc, $StoreNumber,  $StoreOrdUnitsSign,
         $StoreOrdUnits, $StoreCostSign, $StoreCost, $LineNumber, $UniqueAddenda, $ItemRetail
     ) = @_;
   
@@ -82,15 +80,15 @@ sub make_record {
            
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
+
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_PODetail.dat';
-    return;
+return $date . '_PODetail.dat';
+
 }
 
 

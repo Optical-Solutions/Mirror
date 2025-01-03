@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 select * from (
 select employee_id,
 employee_name,
@@ -70,14 +70,11 @@ where not exists (select 1 from cns_merchant_exclusion where base.employee_id = 
 
 "
 ;
-return;
 
 }
 
 sub make_record {
-    my $self = shift;
-    my ($emp_id, $name,  $sub_type, $dept_id ) = @_;
-
+    my ($self,$emp_id, $name,  $sub_type, $dept_id ) = @_;
     my $obj =
         MCCS::CMS::RecordLayout::MerchantRecord->new( filehandle => $self->{'util'}->{'filehandle'} )
         ->set(
@@ -89,15 +86,15 @@ sub make_record {
             
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
+
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_Merchant.dat';
-    return;
+return $date . '_Merchant.dat';
+
 }
 
 

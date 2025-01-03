@@ -6,14 +6,13 @@ use IBIS::NCR::Constants;
 
 #Overload Field Delimiter to pipe
 sub FIELD_DELIMITER {
-    '|';
-    return;
+    return '|';
 }
 
 #Overload Record delimiter to carriage return + line feed
 sub RECORD_DELIMITER {
-    chr(13) . chr(10);
-    return;
+    return chr(13) . chr(10);
+
 }
 
 1;

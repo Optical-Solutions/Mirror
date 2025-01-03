@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 select VENDOR_ID, NAME, null factory_number, CURRENCY_ID, ADDRESS_1, ADDRESS_2, ADDRESS_3, CITY, STATE_ID, ZIP_CODE, COUNTRY_ID, note_1, note_2 ,
 t.term_id, T.Description
 from vendors v
@@ -25,12 +25,11 @@ where v.business_unit_id = '30' and v.VENDOR_STATUS ='A'
 
 "
 ;
-return;
+
 }
 
 sub make_record {
-    my $self = shift;
-    my ($vendor,     $name,     $factor_number, $currency_code, 
+    my ($self,$vendor,     $name,     $factor_number, $currency_code, 
     $address1, $address2, $address3,
     $city, $state, $zip, $country, $vendor_type, $vendor_minimum,
     $term_id, $t_description
@@ -57,15 +56,13 @@ sub make_record {
             
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_Vendor.dat';
-    return;
+    return $date . '_Vendor.dat';
 }
 
 

@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self = shift;
 
-"
+return "
 select
 invoice_number,
 --invoice_date,
@@ -56,14 +56,11 @@ where
  trunc(ei.CREATE_DATE)= Trunc(to_date('rdi_date', 'yyyymmdd' ) - 1)
 "
 ;
-return;
-
 
 }
 
 sub make_record {
-    my $self = shift;
-    my ($InvoiceNo,  $InvoiceDate,  $InvoiceDueDate, $site_id, $PoNumber, $PoDate,
+    my ($self,$InvoiceNo,  $InvoiceDate,  $InvoiceDueDate, $site_id, $PoNumber, $PoDate,
         $VendorNumber, $NumberLines, $ShipDate, $PaymentTerms, $invoiceAmount,
         $address1, $address2, $address3,
         $city, $state, $zip, $country, $invoiceType
@@ -100,15 +97,15 @@ sub make_record {
                         
         }
       );
-    $obj->to_string();
-    return;
+        return $obj->to_string();
+
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_810_Header.dat';
-    return;
+return $date . '_810_Header.dat';
+
 }
 
 #sub database {

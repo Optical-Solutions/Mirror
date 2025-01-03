@@ -14,7 +14,7 @@ sub init {
 sub get_sql {
     my $self               = shift;
 
-"
+return "
 select
   s.site_id,
   s.name,
@@ -61,12 +61,10 @@ Where
 "
 
 ;
-return;
 }
 
 sub make_record {
-    my $self = shift;
-    my ($site,     $name,     $open_date, $command, $close_date, $warehouse,
+    my ($self,$site,     $name,     $open_date, $command, $close_date, $warehouse,
         $address1, $address2, $city,      $state,   $zip, $telephone
     ) = @_;
 
@@ -87,19 +85,17 @@ sub make_record {
             Phone             => substr($telephone, 0,13),
         }
       );
-    $obj->to_string();
-    return;
+    return $obj->to_string();
 }
 
 sub get_filename {
     my $self = shift;
     my $date = shift;
-    $date . '_Site.dat';
+    return $date . '_Site.dat';
 
 #my $date = `date '+%Y%m%d'`;
 #    chomp($date);
 #    $date . '_Site.dat';
-return;
 }
 
 
