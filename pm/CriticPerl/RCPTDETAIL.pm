@@ -8,6 +8,7 @@ use MCCS::CMS::DateTime;
 sub init {
     my $self = shift;
     my $util = $self->{'util'};
+    return;
 }
 
 sub get_sql {
