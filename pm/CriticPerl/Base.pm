@@ -17,18 +17,18 @@ sub new {
 
     $self->init();
 
-    $self;
-    return;
+    return $self;
 }
 
-sub database { 'rms_p'; return;}
+sub database { return 'rms_p';}
 
 sub init { }    #stub, do nothing routine
 
 sub finish { my $self = shift; $self->{'util'}->finish(); return; }  #needs called from subclass
 
 sub DESTROY {
-    if ( $_[0] && ref( $_[0] ) ) { $_[0]->finish(); return;}
+    my $self = shift;
+    if ( $self && ref( $self ) ) { $self->finish(); return;}
     return;
 }
 
