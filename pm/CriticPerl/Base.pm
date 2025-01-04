@@ -22,7 +22,7 @@ sub new {
 
 sub database { return 'rms_p';}
 
-sub init { }    #stub, do nothing routine
+sub init {return;}    #stub, do nothing routine
 
 sub finish { my $self = shift; $self->{'util'}->finish(); return; }  #needs called from subclass
 
