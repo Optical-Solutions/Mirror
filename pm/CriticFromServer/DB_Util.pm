@@ -130,7 +130,7 @@ sub get_reason_code_lookup {
     my $self    = shift;
 
     $self->{get_reason_code_lookup_sth}->execute();
-    my $h;
+    my $h = {};
     while (my $ref = $self->{get_reason_code_lookup_sth}->fetchrow_hashref) {
         $h->{$ref->{reason_id}} = $ref->{description};
     }

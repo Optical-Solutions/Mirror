@@ -507,7 +507,7 @@ ENDOFDATA
 
     } ## end foreach my $sheet ( @{ $excel...})
 
-return;
+return;  #TODO Check who uses this function, and what is espected.
 } ## end sub load_excel
 
 #--------------------------------------------------------------------------
