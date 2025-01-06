@@ -1,7 +1,7 @@
 package MCCS::Reflexis::Util;
 use strict;
 use warnings;
-use constant FILENAME_PATTERN => 'MCCS_RWS_%s_%s.VD0%i';
+#use constant FILENAME_PATTERN => 'MCCS_RWS_%s_%s.VD0%i';
 #constant FILENAME_PATTERN : String := "MCCS_RWS_%s_%s.VD0%i";
 use MCCS::Reflexis::HeaderRecord;
 use MCCS::Reflexis::FooterRecord;
@@ -35,65 +35,65 @@ return $self;
 
 
 sub vddp_filename{
-	_filename('VDP',1);
-	return;
+	 return _filename('VDP',1);
+
 }
 
 sub vddi_filename{
-	_filename('VDI',2);
-	return;
+	return _filename('VDI',2);
+	
 }
 
 
 sub _filename {
 	my ($first_arg, $second_arg) = @_;
-	sprintf(FILENAME_PATTERN, $first_arg, UnixDate(ParseDate('now'), "%q"), $second_arg);
+	return sprintf('MCCS_RWS_%s_%s.VD0%i', $first_arg, UnixDate(ParseDate('now'), "%q"), $second_arg);
 #	sprintf(FILENAME_PATTERN, $_[0], UnixDate(ParseDate('now'), "%q"),$_[1]);
-	return;
+
 }
 sub make_vddp_customer_count{
 	#my $self = shift;
 	#	my ($site_id,$date,$value) = @_;
 	my ($self, $site_id, $date, $value) = @_;
-	$self->make_vddp_record($site_id,'S','',$date,'C_TRANSACTIONS',$value);
-	return;
+	return $self->make_vddp_record($site_id,'S','',$date,'C_TRANSACTIONS',$value);
+	
 }
 sub make_vddp_units_sold{
 	 my ($self, $site_id, $lob, $date, $value) = @_;
-	$self->make_vddp_record($site_id,'X',$lob,$date,'C_ITEMS',$value);
-	return;
+	return $self->make_vddp_record($site_id,'X',$lob,$date,'C_ITEMS',$value);
+	
 }
 sub make_vddp_sales{
 	my ($self, $site_id, $lob, $date, $value) = @_;
-	$self->make_vddp_record($site_id,'X',$lob,$date,'C_SALES',$value);
-	return;
+	return $self->make_vddp_record($site_id,'X',$lob,$date,'C_SALES',$value);
+	
 }
 sub make_vddp_returns{
 	 my ($self, $site_id, $lob, $date, $value) = @_;
-	$self->make_vddp_record($site_id,'X',$lob,$date,'C_RETURNS',$value);
-	return;
+	return $self->make_vddp_record($site_id,'X',$lob,$date,'C_RETURNS',$value);
+	
 }
 sub make_vddi_customer_count{
 	my ($self, $site_id, $date, @time_values) = @_;
-	$self->make_vddi_record($site_id,'S','',$date,'C_TRANSACTIONS',[@time_values]);
-	return;
+	return $self->make_vddi_record($site_id,'S','',$date,'C_TRANSACTIONS',[@time_values]);
+
 }
 sub make_vddi_units_sold {
 	my ($self, $site_id, $lob, $date, @time_values) = @_;
-       	$self->make_vddi_record($site_id, 'D', $lob, $date, 'C_ITEMS', [@time_values]);
-        return;
+    return $self->make_vddi_record($site_id, 'D', $lob, $date, 'C_ITEMS', [@time_values]);
+   
 	}
 
 sub make_vddi_sales {
     	 my ($self, $site_id, $lob, $date, @time_values) = @_;
-	 $self->make_vddi_record($site_id, 'D', $lob, $date, 'C_SALES', [@time_values]);
-	return;
+	return $self->make_vddi_record($site_id, 'D', $lob, $date, 'C_SALES', [@time_values]);
+	
 }
 
 sub make_vddi_returns{
 	my ($self, $site_id, $lob, $date, @time_values) = @_;
-	$self->make_vddi_record($site_id,'D',$lob,$date,'C_RETURNS',[@time_values]);
-return;}
+	return $self->make_vddi_record($site_id,'D',$lob,$date,'C_RETURNS',[@time_values]);
+}
 
 sub make_vddi_record {
 	#my $self = shift;
@@ -104,7 +104,7 @@ sub make_vddi_record {
 
 	$self->_track_header_create();
 
-	MCCS::Reflexis::VDDIRecord->new( filehandle=>$self->{'filehandle'} )->set(
+	return MCCS::Reflexis::VDDIRecord->new( filehandle=>$self->{'filehandle'} )->set(
 		{
 			'Unit ID'=>$site_id,
 			'Feed Level'=>$feed_level,
@@ -114,7 +114,6 @@ sub make_vddi_record {
 			%time_hash
 		}
 	);
-	return;
 }
 
 sub make_vddp_record{
@@ -122,7 +121,7 @@ sub make_vddp_record{
 
 	$self->_track_header_create();
 
-	MCCS::Reflexis::VDDPRecord->new( filehandle=>$self->{'filehandle'} )->set(
+	return MCCS::Reflexis::VDDPRecord->new( filehandle=>$self->{'filehandle'} )->set(
 		{
 			'Unit ID'=>$site_id,
 			'Feed Level'=>$feed_level,
@@ -132,7 +131,6 @@ sub make_vddp_record{
 			'Data Value' => $value
 		}
 	);
-	return;
 }
 
 sub finish{
@@ -147,23 +145,22 @@ return;
 
 sub make_header_record{
 	my $self = shift;
-	MCCS::Reflexis::HeaderRecord->new( filehandle=>$self->{'filehandle'} )->set(
+	return MCCS::Reflexis::HeaderRecord->new( filehandle=>$self->{'filehandle'} )->set(
 		{
 			'Timestamp' => MCCS::Reflexis::DateTimeWithTime->new('NOW'),
 			'Filename' => basename($self->{'filename'}),
 		}
 	);	
-return;
+
 }
 
 sub make_footer_record{
 	my $self = shift;
-	MCCS::Reflexis::FooterRecord->new( filehandle=>$self->{'filehandle'} )->set(
+	return MCCS::Reflexis::FooterRecord->new( filehandle=>$self->{'filehandle'} )->set(
 		{
 			'Record count' => $self->{'count'},
 		}
 	);
-return;
 }
 
 
@@ -173,7 +170,7 @@ sub _track_header_create{
 		$self->make_header_record()->to_string();
 	}
 	$self->{'count'}++;
-return;
+return;  #TODO ASk Hanny
 }
 
 sub DESTROY {
