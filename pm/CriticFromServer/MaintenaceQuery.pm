@@ -169,7 +169,7 @@ insert into wms_ibis_close_picks
    close_type, created_by, status, created_ts)
 values (?,?,?,?,?,?,?,?,?,?,?,?,sysdate )
     );
-    return;  #TODO should this return $sql.
+    return $sql;  #TODO should this return $sql.
  }
 
 sub update_rdi_close_picks {
@@ -208,7 +208,7 @@ update wms_ibis_close_picks set status= ?, updated_by = ?, updated_ts = sysdate
        close_type = ? and
        status = 'A'  
     );
-    return;  #TODO should this be returning $sql.
+    return $sql;  #TODO should this be returning $sql.
  }
 
 #-----------------------------------------------------
