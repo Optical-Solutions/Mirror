@@ -1,0 +1,606 @@
+2,13d1
+< ##--------------------------------------------------------------------------
+< ##Ported by : Kaveh sari 
+< ##Date      : 03/06/2024
+< ##
+< ##Brief Desc: 
+< ##            The program must run as rdiusr.
+< ##	      
+< ##            
+< ##            
+< ##	      
+< ## --------------------------------------------------------------------------  
+< # Compliance Management Solution
+15c3
+< use warnings;
+---
+> 
+31,35d18
+< use IO::File;
+< 
+< use Carp;
+< use IBIS::Crypt;
+< 
+38,42c21,22
+< my $SELF;
+< open ($SELF, ">", $lock_file) or croak "Could not create lock file $lock_file";
+< close $SELF;
+< #flock $SELF, LOCK_EX | LOCK_NB or croak "Another $0 process already running";
+< if (-e $lock_file) { croak "Another $0 process already running"; }
+---
+> open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+> flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+50c30
+< my $host       = 'hostname';
+---
+> my $host       = `hostname`;
+59c39
+< my $g_long_date = 'date +"%D %r"';
+---
+> my $g_long_date = `date +"%D %r"`;
+61c41
+< ##my $csv_file;
+---
+> my $csv_file;
+65c45
+< my $cfg      = MCCS::Config->new();
+---
+> my $cfg      = new MCCS::Config;
+154,155c134,135
+< 		$FH = IO::File->new($output_file, "w") or croak "Can not open output\n";
+< 		#open ($FH, ">",$output_file) or croak "Can not open output\n";
+---
+> 		open $FH, ">$output_file" || die "Can not open output\n";
+> 
+156a137
+> 
+172,173c153
+< 				$FH = IO::File->new($output_file, "w") or croak "Can not open output\n";
+< 				#open ($FH, ">",$output_file) or croak "Can not open output\n";
+---
+> 				open $FH, ">$output_file" || die "Can not open output\n";
+217c197
+< 		parse_xml( $file_path, \@files ) if (! $no_save);
+---
+> 		parse_xml( file_path => $file_path, files => \@files ) if (! $no_save);
+231d210
+< 	return;
+292,295c271,276
+< 	$hashRef->{TsetPurposeCode}         = "00";
+< 	$hashRef->{PurchaseOrderTypeCode} = "A0";
+< 	#--------------------#
+< 	$hashRef->{PurchaseOrderDate} = $po_header->{order_date_yyymmdd};
+---
+> 	$hashRef->{TsetPurposeCode}         = "00",
+> 	  $hashRef->{PurchaseOrderTypeCode} = "A0",
+> 
+> 	  #--------------------#
+> 
+> 	  $hashRef->{PurchaseOrderDate} = $po_header->{order_date_yyymmdd};
+442,443c423,427
+<        my $sql = <<"ENDSQL1";
+< select i.*, to_char(i.expected_delivery_date, 'yyyy-mm-dd') expected_delivery_yyymmdd,to_char(i.order_date, 'yyyy-mm-dd') order_date_yyymmdd
+---
+> 	my $sql = qq(
+> select 
+>   i.*,
+>   to_char(i.expected_delivery_date, 'yyyy-mm-dd') expected_delivery_yyymmdd,
+>   to_char(i.order_date, 'yyyy-mm-dd') order_date_yyymmdd
+445,454c429,450
+< join PURCHASE_ORDERS p on (p.business_unit_id = i.business_unit_id and p.po_id = i.po_id and p.version_no = i.version_no)
+< join reasons rn on (rn.business_unit_id = p.business_unit_id and rn.reason_id = p.reason_id and rn.sub_type = 'PURC_ORDER' and substr(rn.description, 1,3) = 'DLA')
+< where i.business_unit_id = '30' and i.vendor_id = '00069043032'  and i.cancelled_ind <> 'Y'
+< %s 
+< and i.version_no = (select max(version_no) From Iro_Po_Headers p Where  cancelled_ind <> 'Y'
+< %s 
+< and  i.po_id = p.po_id )
+< %s 
+< and '60001' not in (nvl(p.for_site_id,'0'), nvl(p.shipped_to_site_id,'0')) and '70001' not in (nvl(p.for_site_id,'0'), nvl(p.shipped_to_site_id,'0'))
+< ENDSQL1
+---
+> join PURCHASE_ORDERS p on (p.business_unit_id = i.business_unit_id and
+>                            p.po_id = i.po_id and
+>                            p.version_no = i.version_no)
+> join reasons rn on (rn.business_unit_id = p.business_unit_id and
+>                     rn.reason_id = p.reason_id and
+>                     rn.sub_type = 'PURC_ORDER' and
+>                     substr(rn.description, 1,3) = 'DLA')
+> where
+>    i.business_unit_id = '30' 
+>    and i.vendor_id = '00069043032'  
+>    and i.cancelled_ind <> 'Y'
+>    %s
+>    and i.version_no = (select max(version_no) From Iro_Po_Headers p
+>                       Where  cancelled_ind <> 'Y' 
+>                       %s               
+>                       and  i.po_id = p.po_id )
+>    %s
+>    and '60001' not in (nvl(p.for_site_id,'0'), nvl(p.shipped_to_site_id,'0')) 
+>    and '70001' not in (nvl(p.for_site_id,'0'), nvl(p.shipped_to_site_id,'0'))
+>    --and i.po_id not in ('2230357')
+> );
+> 
+481c477
+< 	while ( my $record7 = $sth->fetchrow_hashref() ) {
+---
+> 	while ( my $record = $sth->fetchrow_hashref() ) {
+483c479
+< 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record7;
+---
+> 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record;
+496,498c492,499
+<         my $sql =<<"ENDSQL2";
+<       select  p.*,
+<            (select bar_code_id from bar_codes b where b.business_unit_id = p.business_unit_id and b.style_id = p.style_id and sub_type = 'UPCE' and rownum = 1) bar_code_id,
+---
+> 
+> 	my $sql = qq(
+> select  p.*,
+>            (select bar_code_id from bar_codes b 
+>             where b.business_unit_id = p.business_unit_id and
+>                   b.style_id = p.style_id 
+>               and sub_type = 'UPCE'
+>               and rownum = 1) bar_code_id,
+503c504,505
+<               regexp_substr(sd.zip_code, '[^-]*') regex_zip_code  
+---
+>               regexp_substr(sd.zip_code, '[^-]*') regex_zip_code
+>               
+515a518,519
+>                                              
+>     
+518a523
+>         
+526c531,541
+< ENDSQL2
+---
+> 	);
+> # 	 Join site_dodaac sd on (case when (nvl(p.site_id,h.for_site_id) in ('18100','18101','18703'))
+> #                                then nvl(p.site_id,h.for_site_id)
+> #                                else substr(nvl(p.site_id,h.for_site_id), 1,2)
+> #                                end = case when (nvl(p.site_id,h.for_site_id) in ('18100','18101','18703'))
+> #                                      then sd.ship_to_site
+> #                                      else sd.site_prefix end)
+> 	
+> 	
+> #         left Join site_dodaac_new sd on (nvl(p.site_id,h.for_site_id) = sd.ship_to_site)
+> 
+533c548
+< 	while ( my $record5 = $sth->fetchrow_hashref() ) {
+---
+> 	while ( my $record = $sth->fetchrow_hashref() ) {
+535c550
+< 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record5;
+---
+> 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record;
+550c565
+< 	my $record4 = $sth->fetchrow_hashref();
+---
+> 	my $record = $sth->fetchrow_hashref();
+553c568
+< 	return $record4->{xml_id};
+---
+> 	return $record->{xml_id};
+558c573,576
+< 	my $sql   = qq( select  1 Po_Found From Purchase_Orders  Where Po_Id = (Case When Is_Number('$po_id') = 'Y' Then '$po_id' else '0' end));
+---
+> 	my $sql   = qq( select  1 Po_Found From Purchase_Orders 	 
+>         Where Po_Id = (Case When Is_Number('$po_id') = 'Y'
+> 	                  Then '$po_id' else '0' end)
+> 	  );
+561c579
+< 	my $record1 = $sth->fetchrow_hashref();
+---
+> 	my $record = $sth->fetchrow_hashref();
+564c582
+< 	return $record1->{po_found};
+---
+> 	return $record->{po_found};
+568,571c586,616
+<  my $sql = <<"ENDSQL3";
+<  Select Po_Id,po_group_id,Version_No,Document_Type,Po_Type,For_Site_Id,Shipped_To_Site_Id,to_char(Order_Date, 'mm/dd/yyyy') order_date,Approved_Ind,origin,Reason_Id,Created_By,to_char(Creation_Date, 'mm/dd/yyyy') creation_date,case when (select count(*) from PO_STYLE_COLORS po where po.business_unit_id = p.business_unit_id and po.po_id = p.po_id and po.version_no = p.version_no and po.cost_descriptor not in ('BX','CS','EA','KT','PG','PR','SE')) > 0 then 'Error Found' else null end UOM_ERROR From Purchase_Orders p
+< Where Business_Unit_Id = '30' And Vendor_Id ='00069043032' And Cancelled_Ind <> 'Y' and Ride_Processed_Fin_Date Is Null order by 1
+< ENDSQL3
+---
+> 	my $sql = qq(
+> 	  Select 
+>   Po_Id,
+>   po_group_id,
+>   Version_No,
+>   Document_Type,
+>   Po_Type,
+>   For_Site_Id,
+>   Shipped_To_Site_Id,
+>   to_char(Order_Date, 'mm/dd/yyyy') order_date,
+>   Approved_Ind,
+>   origin,
+>   Reason_Id,
+>   Created_By,
+>   to_char(Creation_Date, 'mm/dd/yyyy') creation_date,
+>   case when (select count(*) from PO_STYLE_COLORS po
+>              where po.business_unit_id = p.business_unit_id and
+>                    po.po_id = p.po_id and
+>                    po.version_no = p.version_no and
+>                    po.cost_descriptor not in ('BX','CS','EA','KT','PG','PR','SE')
+>              ) > 0
+>    then 'Error Found' else null
+>    end UOM_ERROR
+> From Purchase_Orders p
+> Where
+> Business_Unit_Id = '30' And
+> Vendor_Id ='00069043032' And 
+> Cancelled_Ind <> 'Y' and
+> Ride_Processed_Fin_Date Is Null
+> order by 1
+> 	  );
+580c625
+< 	while ( my $record2 = $sth->fetchrow_hashref() ) {
+---
+> 	while ( my $record = $sth->fetchrow_hashref() ) {
+582c627
+< 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record2;
+---
+> 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record;
+591,592c636,637
+<  my $sql = <<"ENDSQL4";
+< Select 
+---
+> 	my $sql = qq(
+> 	  Select 
+608c653,655
+< join IRO_PO_HEADERS h on (h.business_unit_Id = p.business_unit_id and h.po_id = p.po_id and h.version_no = p.VERSION_NO)
+---
+> join IRO_PO_HEADERS h on (h.business_unit_Id = p.business_unit_id and
+>                           h.po_id = p.po_id and
+>                           h.version_no = p.VERSION_NO)
+620,621c667
+< ENDSQL4
+< 
+---
+> 	  );
+629c675
+< 	while ( my $record3 = $sth->fetchrow_hashref() ) {
+---
+> 	while ( my $record = $sth->fetchrow_hashref() ) {
+631c677
+< 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record3;
+---
+> 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record;
+640,652c686,701
+<  my $sql = <<"ENDSQL5";
+< select i.po_id,
+<  i.version_no,
+<  i.po_document_type document_type,
+<  i.po_type,
+<  p.created_by,
+<  p.creation_date,
+<  p.for_site_id,
+<  p.shipped_to_site_id,
+<  p.reason_id,
+<  to_char(i.expected_delivery_date, 'mm/dd/yyyy') expected_delivery_date,
+<  to_char(i.order_date, 'mm/dd/yyyy') order_date,
+<  to_char(i.ride_in_date, 'mm/dd/yyyy') ride_in_date
+---
+> 
+> 	my $sql = qq(
+> select 
+>   i.po_id,
+>   i.version_no,
+>   i.po_document_type document_type,
+>   i.po_type,
+>   p.created_by,
+>   p.creation_date,
+>   p.for_site_id, 
+>   p.shipped_to_site_id,
+>   p.reason_id,
+>   to_char(i.expected_delivery_date, 'mm/dd/yyyy') expected_delivery_date,
+>   to_char(i.order_date, 'mm/dd/yyyy') order_date,
+>   to_char(i.ride_in_date, 'mm/dd/yyyy') ride_in_date 
+>   
+654,655c703,709
+< join PURCHASE_ORDERS p on (p.business_unit_id = i.business_unit_id and p.po_id = i.po_id and p.version_no = i.version_no)
+< left join reasons rn on (rn.business_unit_id = p.business_unit_id and rn.reason_id = p.reason_id and rn.sub_type = 'PURC_ORDER' and substr(rn.description, 1,3) = 'DLA')
+---
+> join PURCHASE_ORDERS p on (p.business_unit_id = i.business_unit_id and
+>                            p.po_id = i.po_id and
+>                            p.version_no = i.version_no)
+> left join reasons rn on (rn.business_unit_id = p.business_unit_id and
+>                     rn.reason_id = p.reason_id and
+>                     rn.sub_type = 'PURC_ORDER' and
+>                     substr(rn.description, 1,3) = 'DLA')
+657,658c711,712
+<    i.business_unit_id = '30'
+<    and i.vendor_id = '00069043032'
+---
+>    i.business_unit_id = '30' 
+>    and i.vendor_id = '00069043032'  
+662,663c716,717
+<                       Where  cancelled_ind <> 'Y'
+<                       %s
+---
+>                       Where  cancelled_ind <> 'Y' 
+>                       %s               
+666,667c720,723
+<    and( '60001' in (p.for_site_id, p.shipped_to_site_id) or '70001'  in (p.for_site_id, p.shipped_to_site_id) or rn.reason_id is null ) 
+< ENDSQL5
+---
+>    and( '60001' in (p.for_site_id, p.shipped_to_site_id) or
+>         '70001'  in (p.for_site_id, p.shipped_to_site_id) or
+>         rn.reason_id is null ) 	
+> );
+695c751
+< 	while ( my $record6 = $sth->fetchrow_hashref() ) {
+---
+> 	while ( my $record = $sth->fetchrow_hashref() ) {
+697c753
+< 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record6;
+---
+> 		$results->{ 'rec_' . sprintf( '%.6d', $ctr ) } = $record;
+712,713c768,776
+< 	
+< 	my $sql = qq(insert into xml_save_parsed_data(XML_ID, PARENT_ELEMENT_ID, ELEMENT_TREE_LVL, ELEMENT_NAME,ELEMENT_TYPE, ELEMENT_DATA, CREATE_TS, XML_SOURCE, XML_TYPE, ALT_ELEMENT_NAME) values (?,?,?,?,?,?,sysdate,?,?,?) returning element_id into ?);
+---
+> 
+> 	my $sql = qq(
+> 	  insert into xml_save_parsed_data 
+> 	   (XML_ID, PARENT_ELEMENT_ID, ELEMENT_TREE_LVL, ELEMENT_NAME,
+> 	    ELEMENT_TYPE, ELEMENT_DATA, CREATE_TS, XML_SOURCE, XML_TYPE, ALT_ELEMENT_NAME)
+> 	   values (?,?,?,?,?,?,sysdate,?,?,?)
+> 	   returning element_id into ?
+> 	   
+> 	);
+737c800,803
+< 	my $sql = qq(insert into xml_save_data (create_ts, xml_source, xml_type, xml_data) values (sysdate,'$file_name','DLA',?));
+---
+> 	my $sql = qq(
+> 	  insert into xml_save_data (create_ts, xml_source, xml_type, xml_data)
+> 	   values (sysdate,'$file_name','DLA',?)
+> 	);
+743d808
+< 	return;
+753,754c818,825
+<        
+<        my $sql = qq(insert into dla_po_odn (PO_ID, VERSION_NO, ODN, BAR_CODE_ID, QTY_ORDERED, FIN_LINE_NO, COST_DESCRIPTOR, DODDAC, REASON_ID,RDER_DATE, EXPECTED_DELIVERY, CREATED_TS) values (?,?,?,?,?,?,?,?,?,?,?,sysdate));
+---
+> 
+> 	my $sql = qq(
+> 	  insert into dla_po_odn 
+> 	   (PO_ID, VERSION_NO, ODN, 
+> 	    BAR_CODE_ID, QTY_ORDERED, FIN_LINE_NO, COST_DESCRIPTOR, DODDAC, REASON_ID,
+>         ORDER_DATE, EXPECTED_DELIVERY, CREATED_TS)
+> 	   values (?,?,?,?,?,?,?,?,?,?,?,sysdate)
+> 	);
+771d841
+< 	return;
+779,781c849
+< 	my %args;
+< 	( $args{file_path} ) = shift;
+< 	( $args{files} ) = shift;
+---
+> 	my %args = @_;
+792,793c860,861
+< 		open( $FH, "<", $input_file) or  croak "Can not open $input_file\n";
+< 		local $/ = undef;
+---
+> 		open $FH, "<$input_file" || die "Can not open $input_file\n";
+> 		$/ = undef;
+796,798c864
+< 		
+< 		save_xml_db( xml => $file_content, file_name => $fn ); 
+< 		
+---
+> 		eval { save_xml_db( xml => $file_content, file_name => $fn ); };
+822d887
+< 	return;
+889d953
+< 	return;
+897c961
+< 	my $file_path2 = shift;
+---
+> 	my $file_path = shift;
+899c963
+< 	log_debug("Sftp file to SPS!  path=> $file_path2   name=>$filename\n");
+---
+> 	log_debug("Sftp file to SPS!  path=> $file_path   name=>$filename\n");
+908c972
+< 		#use IBIS::Crypt;
+---
+> 		use IBIS::Crypt;
+929,930c993
+< 			
+< 			$sftp = Net::SFTP::Foreign->new( $dest, %arglist );
+---
+> 			eval { $sftp = Net::SFTP::Foreign->new( $dest, %arglist ) };
+941c1004
+< 			$file_path2 . $filename, $inputDir . '/' . $filename,
+---
+> 			$file_path . $filename, $inputDir . '/' . $filename,
+956c1019,1022
+< 	log_debug("Skipping file send per command line switch --nosend\nFiles to be sent $filename");
+---
+> 		log_debug(
+> 			"Skipping file send per command line switch 
+> 		       --nosend\nFiles to be sent $filename"
+> 		);
+958d1023
+< 	return;
+968c1033
+<         return;
+---
+> 
+972,1010c1037,1088
+<   my $html = <<'ENDHTML1';
+<   <html><head><style>
+<   .e832_table a:hover {text-decoration: underline;}
+<   .e832_table {
+<   font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+<   font-size: 11px;
+<   border-collapse: collapse;
+<   border: 1px solid #69c;
+<   margin-right: auto;
+<   margin-left: auto;
+<   margin-top: auto;
+<   margin-bottom: auto;
+<   }
+<   .e832_table caption {
+<   font-size: 15px;
+<   font-weight: bold;
+<   padding: 12px 17px 5px 17px;
+<   color: #039;
+<   }
+<   .e832_table th {
+<   padding: 1px 3px 1px 3px;
+<   background-color: RoyalBlue;
+<   font-weight: normal;
+<   font-size: 11px;
+<   color: #FFF;
+<   }
+<   .e832_table tr:hover td {
+<   color: #339;
+<   background: #d0dafd;
+<   }
+<   .e832_table td {
+<   padding: 2px 3px 1px 3px;
+<   color: #000;
+<   background: #fff;
+<   }
+<   .e832_table tr {
+<   padding: 0px 0px 0px 0px;
+<   }<\style><\head>
+< ENDHTML1
+---
+> 	my $html = '
+> 	<html>
+> <head>
+> <style>
+> /* e832_table */
+> .e832_table a:hover {
+>     text-decoration: underline;
+>     /*color : #DC143C;   /* Crimson */
+> }
+> .e832_table {
+>     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+>     /*font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif; */
+>     font-size: 11px;
+>     border-collapse: collapse;
+>     border: 1px solid #69c;
+>     margin-right: auto;
+>     margin-left: auto;
+>     margin-top: auto;
+>     margin-bottom: auto;
+> }
+> .e832_table caption {
+>     font-size: 15px;
+>     font-weight: bold;
+>     padding: 12px 17px 5px 17px;
+>     color: #039;
+> }
+> .e832_table th {
+>     padding: 1px 3px 1px 3px;
+>     background-color: RoyalBlue;
+>     font-weight: normal;
+>     font-size: 11px;
+>     /* text-align: left; */
+>     color: #FFF; 
+> }
+> .e832_table tr:hover td {
+>     color: #339;
+>     background: #d0dafd;
+> }
+> .e832_table td {
+>     padding: 2px 3px 1px 3px;
+>     color: #000;
+>     background: #fff;
+> }
+> .e832_table tr {
+>     padding: 0px 0px 0px 0px;
+> }
+> 
+> 
+> <\style>
+> <\head>
+> 	';
+> 
+1036c1114
+< 		open( $FH, ">" ,$pre_active_file) or croak "Can not open output\n";
+---
+> 		open $FH, ">$pre_active_file" || die "Can not open output\n";
+1049c1127,1129
+< 		$html_table .= qq(<span style="background-color: yellow;">The following is a list of DLA POs that are currently in process and need to be completed or cancel.</span><br><br>\n\n);
+---
+> 		$html_table .= qq(<span style="background-color: yellow;">
+>          The following is a list of DLA POs that are currently in process and need to be completed or cancel.</span><br><br>
+>          \n\n);
+1068d1147
+< 	return;
+1093c1172
+< 	open ($FH, ">",$after_process_file) or croak "Can not open output\n";
+---
+> 	open $FH, ">$after_process_file" || die "Can not open output\n";
+1105c1184,1185
+< 	$html_table .= qq(<span style="background-color: lightgreen;">The following is a list of DLA POs that have been PROCESSED and SENT via Sftp.</span><br><br>\n\n);
+---
+> 	$html_table .= qq(<span style="background-color: lightgreen;">
+>        The following is a list of DLA POs that have been PROCESSED and SENT via Sftp.</span><br><br>\n\n);
+1124d1203
+<     return;
+1148c1227
+< 	open ($FH, ">",$after_process_file) or croak "Can not open output\n";
+---
+> 	open $FH, ">$after_process_file" || die "Can not open output\n";
+1160c1239,1240
+< 	$html_table .= qq(The following is a list of DLA POs that had <span style="background-color: red;">ERRORS.</span><br><br>\n\n);
+---
+> 	$html_table .= qq(
+>        The following is a list of DLA POs that had <span style="background-color: red;">ERRORS.</span><br><br>\n\n);
+1176c1256,1257
+< 		logs => ( $after_process_file, ));
+---
+> 		logs => ( $after_process_file, )
+> 	);
+1178d1258
+<     return;
+1206d1285
+< 	return;
+1213,1214c1292
+< 	my $str = shift;
+< 	my $log_entry = join( '', "(PID $$) ", $str );
+---
+> 	my $log_entry = join( '', "(PID $$) ", @_ );
+1217d1294
+< 	return;
+1221,1222c1298
+< 	my $str = shift;
+< 	my $log_entry = join( '', "(PID $$) ", $str );
+---
+> 	my $log_entry = join( '', "(PID $$) ", @_ );
+1230d1305
+< 	return;
+1234d1308
+< 	my $str = shift;
+1236c1310
+< 	my $log_entry = join( '', "(PID $$) ", $str );
+---
+> 	my $log_entry = join( '', "(PID $$) ", @_ );
+1242c1316
+< 	croak $log_entry;
+---
+> 	die $log_entry;
+1246d1319
+< 	my $str = shift;
+1248c1321
+< 		print "DEBUG: ", $str, "\n";
+---
+> 		print "DEBUG: ", @_, "\n";
+1250d1322
+< 	return;
+1262c1334
+< 
+---
+> eval {
+1264a1337
+> };
+1268c1341
+< unlink($lock_file);
+---
+> 
