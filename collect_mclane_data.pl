@@ -14,7 +14,8 @@
 # Ensured directories persent, updated email to Kav ONLY.  
 # Updated by Kaveh Sari 
 # Porting Complete  October 10, 2024 1:50:40 PM
-# Restored to required functionality.  
+# Restored to required functionality.    
+# Testing on 2/18/2025  
 #------------------------------------------------------------------------
 use strict;
 use IBIS::DBI;
@@ -30,6 +31,9 @@ use File::Basename;
 use File::Spec;
 use File::Copy;
 use File::Path;
+use Moose;
+use Readonly;
+use IO::File;
 
 # Define constant to contain fully qualified path name to this script's log file
 Readonly my $g_logfile => '/usr/local/mccs/log/mclane/'
@@ -42,13 +46,14 @@ CRTMCLRPTFILE
 my $stage;
 my $retry;
 my $g_weekEndingDate;
-use constant DEFAULT_OUTPUT_DIR => '/usr/local/mccs/data/mclane/';
+Readonly my $DEFAULT_OUTPUT_DIR => '/usr/local/mccs/data/mclane/';
 
 # Default verbosity mode
 my $g_verbose = 0;
 
 # Instantiate MCCS::Config object
-my $g_cfg = new MCCS::Config;
+#my $g_cfg = new MCCS::Config;
+my $g_cfg = MCCS::Config->new();
 
 ### CREATE THESE CONFIGURATION ENTRIES IN IBISCFG.XML FOR MCLANE
 
@@ -79,8 +84,9 @@ my $suppress_send = 0;
 my $options = ( GetOptions('nosend' =>  \$suppress_send));
 
 # Connect to DB
-my $g_dbh = IBIS::DBI->connect( dbname => 'rms_r' );
-
+# Connect to DB  next line commented out...was part of original code.
+#my $g_dbh = IBIS::DBI->connect( dbname => 'rms_r' );
+my $super_dbh = IBIS::DBI->connect( dbname =>'MVMS-Middleware-RdiUser');
 # Invoke stored procedure to create MClane report file
 create_MCL_Rpt_Table();
 
@@ -98,7 +104,7 @@ else{
 sub create_MCL_Rpt_Table {
 	my $sth;
 	$g_log->info('Main sproc started execution' );
-	eval { $sth = $g_dbh->prepare($crt_mclane_data) };
+	eval { $sth = $super_dbh->prepare($crt_mclane_data) };
 	if ($@) {
 		fatal_error("Failed to prepare query below:\n$crt_mclane_data\n");
 	}
@@ -113,6 +119,7 @@ sub create_MCL_Rpt_Table {
 		fatal_error(
 			"Failed while attempting to execute procedure $crt_mclane_data: ($@)\n");
 	}
+	return;
 }
 
 # Create daily flat file to send to Mcal
@@ -133,26 +140,28 @@ MCLFLATFILE
 # Add on 'where' clause if list of sites contains at least 1 site
     $flatFileData .= ' where site_id in (' . (join ',',@g_rpt_sites) . ')' if @g_rpt_sites; 
     
-	my $sth = $g_dbh->prepare($flatFileData);
+	my $sth = $super_dbh->prepare($flatFileData);
 	$sth->execute();
 
 	# Create flat file to be sent to MCL
-	open OUT, '>', DEFAULT_OUTPUT_DIR . $g_mclFile;
+	my $outfile = $DEFAULT_OUTPUT_DIR . $g_mclFile;
+	my $OUT = IO::File->new($outfile, 'w') or croak "Could not write $outfile because $!";
+	#open OUT, '>', $DEFAULT_OUTPUT_DIR . $g_mclFile;
 
 	# Write records to flat file
 	my $row;
 	while ( $row = $sth->fetchrow_hashref() ) {
-		print OUT $row->{site_id} . ',';
-		print OUT $row->{upc} . ',';
-		print OUT $row->{avg_pos_qty} . ',';
-		print OUT $row->{act_pos_qty} . ',';
-		print OUT ( $row->{curr_qty_onhand} < 0 ? 0 : $row->{curr_qty_onhand} )
-		  . "\n";
+		print $OUT $row->{site_id} . ',';
+		print $OUT $row->{upc} . ',';
+		print $OUT $row->{avg_pos_qty} . ',';
+		print $OUT $row->{act_pos_qty} . ',';
+		print $OUT ( $row->{curr_qty_onhand} < 0 ? 0 : $row->{curr_qty_onhand} ) . "\n";
 	}
 
 	# close flat file
-	close OUT;
+	close $OUT;
 	$g_log->info('Flat file creation completed' );
+	return;
 }
 
 # SFTP file to MCL
@@ -195,7 +204,7 @@ sub sftpTOMCL {
 			fatal_error("SFTP connection to MCL server ($dest) failed!");
 		}
 		$sftp->put(
-			DEFAULT_OUTPUT_DIR . $g_mclFile, $remote_d . $g_mclFile,
+			$DEFAULT_OUTPUT_DIR . $g_mclFile, $remote_d . $g_mclFile,
 			copy_perms => 0,
 			copy_time  => 0,
 			atomic     => 1
@@ -206,7 +215,7 @@ sub sftpTOMCL {
 	}
 	else {
 		fatal_error( 'MCL flat file '
-			  . DEFAULT_OUTPUT_DIR
+			  . $DEFAULT_OUTPUT_DIR
 			  . $g_mclFile
 			  . ' does not exist. Alert RDI personnel!' );
 	}
@@ -214,6 +223,7 @@ sub sftpTOMCL {
    	$g_log->info('SFTP transfer completed' );
 	# Archive succesfully sent file
 	archiveSentFile();
+	return;
 }
 
 #  Routine to archive produced and sent files
@@ -229,12 +239,13 @@ sub archiveSentFile {
 	}
 
 	# Archive MCL file
-	copy( DEFAULT_OUTPUT_DIR . $g_mclFile, "$arc_dir/$g_date/$g_mclFile" )
+	copy( $DEFAULT_OUTPUT_DIR . $g_mclFile, "$arc_dir/$g_date/$g_mclFile" )
 	  or fatal_error(
-		"Archiving of " . DEFAULT_OUTPUT_DIR . $g_mclFile . ' failed!' );
+		"Archiving of " . $DEFAULT_OUTPUT_DIR . $g_mclFile . ' failed!' );
 	# Send email confirming that process ended normally
 	send_mail( 'MCL EXTRACT',
 		' EXTRACT FILE HAS BEEN SUCCESFULLY SENT TO MCL SERVER ' );
+	return;
 }
 
 ##################################################################################
@@ -260,7 +271,7 @@ sub send_mail {
 		$g_log->info("  Sbj: $msg_sub ");
 		$g_log->debug("  $msg_bod1 ");
 		$g_log->debug("  $msg_bod2 ");
-		open( MAIL, "|/usr/sbin/sendmail -t" );
+		open( MAIL, "|/usr/sbin/sendmail -t" ); ## no critic qw(InputOutput::ProhibitBarewordFileHandles InputOutput::ProhibitTwoArgOpen InputOutput::RequireBriefOpen)
 		print MAIL "To: " . $g_emails->{$name} . " \n";
 		print MAIL "From: rdistaff\@usmc-mccs.org\n";
 		print MAIL "Subject: $msg_sub \n";
@@ -272,5 +283,6 @@ sub send_mail {
 		print MAIL "\n";
 		close(MAIL);
 	}
+	return;	
 }
 
