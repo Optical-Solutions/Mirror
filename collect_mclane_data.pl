@@ -260,29 +260,29 @@ sub fatal_error {
 ##################################################################################
 #      Routine to send notification emails
 ##################################################################################
-sub send_mail {
-	my $msg_sub  = shift;
-	my $msg_bod1 = shift;
-	my $msg_bod2 = shift || '';
-	return if $g_verbose;    # Dont want to send email if on verbose mode
+ sub send_mail {
+	# my $msg_sub  = shift;
+	# my $msg_bod1 = shift;
+	# my $msg_bod2 = shift || '';
+	# return if $g_verbose;    # Dont want to send email if on verbose mode
 
-	foreach my $name ( sort keys %{$g_emails} ) {
-		$g_log->info( "Sent email to $name (" . $g_emails->{$name} . ")" );
-		$g_log->info("  Sbj: $msg_sub ");
-		$g_log->debug("  $msg_bod1 ");
-		$g_log->debug("  $msg_bod2 ");
-		open( MAIL, "|/usr/sbin/sendmail -t" ); ## no critic qw(InputOutput::ProhibitBarewordFileHandles InputOutput::ProhibitTwoArgOpen InputOutput::RequireBriefOpen)
-		print MAIL "To: " . $g_emails->{$name} . " \n";
-		print MAIL "From: rdistaff\@usmc-mccs.org\n";
-		print MAIL "Subject: $msg_sub \n";
-		print MAIL "\n";
-		print MAIL $msg_bod1;
-		print MAIL $msg_bod2;
-		print MAIL "\n\nServer: " . `hostname` . "\n";
-		print MAIL "\n";
-		print MAIL "\n";
-		close(MAIL);
-	}
-	return;	
-}
+	# foreach my $name ( sort keys %{$g_emails} ) {
+	# 	$g_log->info( "Sent email to $name (" . $g_emails->{$name} . ")" );
+	# 	$g_log->info("  Sbj: $msg_sub ");
+	# 	$g_log->debug("  $msg_bod1 ");
+	# 	$g_log->debug("  $msg_bod2 ");
+	# 	open( MAIL, "|/usr/sbin/sendmail -t" ); ## no critic qw(InputOutput::ProhibitBarewordFileHandles InputOutput::ProhibitTwoArgOpen InputOutput::RequireBriefOpen)
+	# 	print MAIL "To: " . $g_emails->{$name} . " \n";
+	# 	print MAIL "From: rdistaff\@usmc-mccs.org\n";
+	# 	print MAIL "Subject: $msg_sub \n";
+	# 	print MAIL "\n";
+	# 	print MAIL $msg_bod1;
+	# 	print MAIL $msg_bod2;
+	# 	print MAIL "\n\nServer: " . `hostname` . "\n";
+	# 	print MAIL "\n";
+	# 	print MAIL "\n";
+	# 	close(MAIL);
+	# }
+ 	return;	
+ }
 
