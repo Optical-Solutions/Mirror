@@ -422,7 +422,7 @@ sub send_mail_with_attachment {
 ### Fetch cost file from Mclane
 ### note, using mcl_DATA config info
 
-sub sftpFromMclane {
+$sub sftpFromMclane {
     my ($log) = @_;
    # Instantiate MCCS::Config object
     my $g_cfg = new MCCS::Config;
