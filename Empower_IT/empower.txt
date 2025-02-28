@@ -5,7 +5,7 @@
 	"containerProperties": {
 		"image": "${pullImageFromAccountId}.dkr.ecr.us-gov-west-1.amazonaws.com/mccs/developers/app/mvms-middleware:${containerImageTag}",
 		"command": [
-			"perl","/home/perl/bin/empower-it/empower_sales_data.pl","--po","2757903"],
+			"perl","/home/perl/bin/empower-it/empower_sales_data.pl"],
 		"executionRoleArn": "${executionRoleArn}",
 		"volumes": [
 			{

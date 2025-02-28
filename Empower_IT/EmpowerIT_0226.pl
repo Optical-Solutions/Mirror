@@ -133,50 +133,50 @@ sub mainLine {
           . sprintf( "%02d", $closedWeek->{merchandising_week} ) . '.csv';
 
         $path_file = $baseDir . $filename;
+#Commented out everything ...
+#         if ( incompleteSalesBoolean($closedWeek) ) {
+#             if ( !$debug ) {    #warn will send email
+#                 log_warn(
+# qq(Not all sales have processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date} )
+#                 );
+#             }
+#             log_debug(
+# qq(Not all sales have processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date} )
+#             );
 
-        if ( incompleteSalesBoolean($closedWeek) ) {
-            if ( !$debug ) {    #warn will send email
-                log_warn(
-qq(Not all sales have processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date} )
-                );
-            }
-            log_debug(
-qq(Not all sales have processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date} )
-            );
+#             my $timeout      = 1;                                    #set true
+#             my $retry        = $cfg->empowerit_v2->{retries};
+#             my $sleepTimeSec = $cfg->empowerit_v2->{sleepTimeSec};
+#             $sleepTimeSec = 2300 if ( !$sleepTimeSec );
 
-            my $timeout      = 1;                                    #set true
-            my $retry        = $cfg->empowerit_v2->{retries};
-            my $sleepTimeSec = $cfg->empowerit_v2->{sleepTimeSec};
-            $sleepTimeSec = 2300 if ( !$sleepTimeSec );
+#             while ($retry) {
+#                 my $dt_1        = DateTime->now();
+#                 my $timestamp_1 = $dt_1->strftime('%Y-%m-%d %H:%M:%S');
+#                 log_debug(qq(Retries left $retry \@ $timestamp_1 ));
 
-            while ($retry) {
-                my $dt_1        = DateTime->now();
-                my $timestamp_1 = $dt_1->strftime('%Y-%m-%d %H:%M:%S');
-                log_debug(qq(Retries left $retry \@ $timestamp_1 ));
+#                 if ( !incompleteSalesBoolean($closedWeek) ) { #-all sales are in
+#                     $timeout = 0;
+#                     last;
+#                 }
 
-                if ( !incompleteSalesBoolean($closedWeek) ) { #-all sales are in
-                    $timeout = 0;
-                    last;
-                }
+#                 if ($force_sw) {
+#                     $timeout = 0;
+#                     log_debug(
+# qq(Force switch was set gathering data as is regardless of missing Sales)
+#                     );
+#                     last;
+#                 }
 
-                if ($force_sw) {
-                    $timeout = 0;
-                    log_debug(
-qq(Force switch was set gathering data as is regardless of missing Sales)
-                    );
-                    last;
-                }
+#                 $retry--;
+#                 sleep $sleepTimeSec;
+#             }
 
-                $retry--;
-                sleep $sleepTimeSec;
-            }
-
-            if ($timeout) {
-                fatal_error(
-qq(The alotted time has expired for Sales to complete befor running EmpowerIT Sales extract please contact RDI group)
-                );
-            }
-        }
+#             if ($timeout) {
+#                 fatal_error(
+# qq(The alotted time has expired for Sales to complete befor running EmpowerIT Sales extract please contact RDI group)
+#                 );
+#             }
+#         }
 
         log_debug(
 qq( All Sales have been processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date}  )
@@ -189,7 +189,7 @@ qq( All Sales have been processed for $closedWeek->{week_start_date} thru $close
     #       push(@zipFileNames, zip_files($file) );
     #     }
     #     log_debug( "Zipped file: ",     @zipFileNames );
-sftpFiles
+
     sftpFiles($filename);
     archiveFiles($filename);
     return;
@@ -263,6 +263,13 @@ sub sftpFiles {
         # Retrieve MCL user name and password
         $arglist{user}     = $sftpHash->{user};
         $arglist{password} = $sftpHash->{password};
+        
+        #Testing for configuration values, next four lines.
+        print "DEST is " . $dest . "\n";
+        print "inputDir is " . $inputDir . "\n"
+        print "User is " . $arglist{user} . "\n"
+        print "Password is " . $arglist{password} . "\n"
+        #########
 
         #$arglist{port}     = $sftpHash->{port};
 
@@ -272,13 +279,14 @@ sub sftpFiles {
 
         # Establish SFTP connection to server
         my $sftp;
-        my $num_retry      = 10;
-        my $successful_ftp = 'N';
+        #Next two lines comented as they are not used.
+        # my $num_retry      = 10;  
+        # my $successful_ftp = 'N';
         $sftp = Net::SFTP::Foreign->new( $dest, %arglist ) or croak "SFTP failed $!";
-
-        if ( $successful_ftp eq 'N' ) {
-            fatal_error("SFTP connection to NFI server ($dest) failed!");
-        }
+        #Next three lines comented value for successful ftp is never changed.
+        # if ( $successful_ftp eq 'N' ) {
+        #     fatal_error("SFTP connection to NFI server ($dest) failed!");
+        # }
 
         foreach my $zFile (@zFiles) {
             $sftp->put(
