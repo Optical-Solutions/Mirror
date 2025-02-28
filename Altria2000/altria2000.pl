@@ -68,7 +68,7 @@ if ($DEBUG) {
 }
 my $g_progname = basename(__FILE__);
 $g_progname =~ s/\.\w+$//x;
-Readonly my $g_logfile => '/usr/local/mccs/log/altria/' . $g_progname . '.log';
+Readonly my $g_logfile => '/tmp/' . $g_progname . '.log';
 
 my $g_long_date = $g_ymd;
 chomp($g_long_date);    # chop the carriage return or end of line.
@@ -245,7 +245,8 @@ sub make_detail {
                     SD.STYLE_ID||'|'||
                     SD.BAR_CODE_ID||'|'||
                     S.DESCRIPTION||'|'||
-                    'EA'
+                    CASE WHEN V.CLASS_ID = '2000' THEN 'EA'
+                         ELSE 'EA'
                     END ||'|'||
                     SD.QTY||'|'||
                     CASE WHEN STYLE_TYPE = 'MULTI' THEN 
