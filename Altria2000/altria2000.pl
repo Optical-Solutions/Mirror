@@ -47,8 +47,8 @@ my $g_cfg = MCCS::Config->new();
 my $g_emails      = $g_cfg->Altria->{tech_emails};
 my $g_cust_emails = $g_cfg->Altria->{customer_emails};
 my $g_dbname      = $g_cfg->Altria->{RMS};
-my $g_base_d      = "/usr/local/mccs/data/altria";
-my $g_txt_d       = "/usr/local/mccs/data/altria/txt";
+my $g_base_d      = "/tmp/altria";
+my $g_txt_d       = "/tmp/altria";
 my $g_count       = "";
 my $g_dt          = DateTime->now;
 my $g_ymd         = $g_dt->ymd('');
@@ -245,9 +245,7 @@ sub make_detail {
                     SD.STYLE_ID||'|'||
                     SD.BAR_CODE_ID||'|'||
                     S.DESCRIPTION||'|'||
-                    CASE WHEN V.CLASS_ID = '2000' THEN 'EA'
-                         ELSE 'EA'
-                    END ||'|'||
+                    'EA'||'|'||
                     SD.QTY||'|'||
                     CASE WHEN STYLE_TYPE = 'MULTI' THEN 
                         (SELECT distinct TO_CHAR(X.MULTI_QTY) FROM STYLES X WHERE BUSINESS_UNIT_ID = 30 AND
@@ -291,7 +289,7 @@ join STYLES S on (s.business_unit_id = sa.business_unit_id and
                   s.style_id = sd.style_id)
 
                   
-join SITES_ALTRIA  A on (sa.business_unit_id = a.business_unit_id and
+join rsg.SITES_ALTRIA@mc2p  A on (sa.business_unit_id = a.business_unit_id and
                              sa.site_id = a.site_id)
                              
 join V_DEPT_CLASS_SUBCLASS V on (S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND
