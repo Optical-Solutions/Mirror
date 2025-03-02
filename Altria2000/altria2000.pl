@@ -294,9 +294,10 @@ join rsg.SITES_ALTRIA@mc2p  A on (sa.business_unit_id = a.business_unit_id and
                              
 join V_DEPT_CLASS_SUBCLASS V on (S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND
                                  S.SECTION_ID = V.SECTION_ID and 
-                                 V.DEPARTMENT_ID = '0992' and
-                                 v.class_id IN ('2000'))
-
+                                 (V.DEPARTMENT_ID = '0991' and
+                                 v.class_id IN ('1100','1200')) or 
+                                 (V.DEPARTMENT_ID = '0992' and
+                                 v.class_id IN ('2000')))
 join STYLE_CHARACTERISTICS SC on (S.business_unit_id = sc.business_unit_id and
                                   S.STYLE_ID = SC.STYLE_ID )
 
@@ -315,7 +316,7 @@ SA.REGISTER_ID
 };
 
 
-    $sql =~s/dow/5/xg;
+    $sql =~s/dow/7/xg;
                     # Change this to the actual SQL
 
     my $sth = $g_dbh->prepare($sql) or fatal_error("Cannot prepare $sql");
@@ -356,9 +357,9 @@ sub make_header {
     $g_log->info("Make header records");
 
     my $data;
-    my $sql = q{ select COUNT(*) ||'|'|| SUM(SD.QTY)||'|'|| to_char(SUM(SD.EXTENSION_AMOUNT),'fm9999999.90')||'|'|| 'MARINECORPSPERSONALFAMILYREAD' FROM  STYLES S, SALES SA, SALE_DETAILS SD, rsg.SITES_ALTRIA@mc2p  A, V_DEPT_CLASS_SUBCLASS V, CHARACTERISTIC_VALUES cv, STYLE_CHARACTERISTICS SC, MERCH_CAL_MIKE_WEEK M WHERE S.BUSINESS_UNIT_iD = 30 AND S.BUSINESS_UNIT_ID = SA.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = SD.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = A.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = CV.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = M.BUSINESS_UNIT_ID AND S.STYle_ID = SD.STYLE_ID AND SA.SITE_ID = SD.SITE_ID AND SA.SALE_DATE = SD.SALE_DATE AND SA.SLIP_NO = SD.SLIP_NO AND SA.REGISTER_ID = SD.REGISTER_ID AND SA.SITE_ID = A.SITE_ID AND S.SECTION_ID = V.SECTION_ID AND S.STYLE_ID = SC.STYLE_ID AND SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID AND CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000') AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1)) };
+    my $sql = q{ select COUNT(*) ||'|'|| SUM(SD.QTY)||'|'|| to_char(SUM(SD.EXTENSION_AMOUNT),'fm9999999.90')||'|'|| 'MARINECORPSPERSONALFAMILYREAD' FROM  STYLES S, SALES SA, SALE_DETAILS SD, rsg.SITES_ALTRIA@mc2p  A, V_DEPT_CLASS_SUBCLASS V, CHARACTERISTIC_VALUES cv, STYLE_CHARACTERISTICS SC, MERCH_CAL_MIKE_WEEK M WHERE S.BUSINESS_UNIT_iD = 30 AND S.BUSINESS_UNIT_ID = SA.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = SD.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = A.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = CV.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = M.BUSINESS_UNIT_ID AND S.STYle_ID = SD.STYLE_ID AND SA.SITE_ID = SD.SITE_ID AND SA.SALE_DATE = SD.SALE_DATE AND SA.SLIP_NO = SD.SLIP_NO AND SA.REGISTER_ID = SD.REGISTER_ID AND SA.SITE_ID = A.SITE_ID AND S.SECTION_ID = V.SECTION_ID AND S.STYLE_ID = SC.STYLE_ID AND SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID AND CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND ((V.DEPARTMENT_ID = '0991' and v.class_id IN ('1100','1200')) or (V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000'))) AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1)) };
 
-    $sql =~s/dow/5/xg;
+    $sql =~s/dow/7/xg;
                     # Change this to the actual SQL
 #$sql = "select sysdate from dual";
     my $sth = $g_dbh->prepare($sql) or fatal_error("Cannot prepare $sql");
