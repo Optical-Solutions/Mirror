@@ -8,7 +8,8 @@
 #
 # Requestor  :
 # Ported by  : Hanny Januarius
-# Date       : Thu Dec  7 08:11:38 EST 2023
+# Date       : Thu Dec  7 08:11:38 EST 2023    
+# Tested     : For Cloud Deployment.
 #---------------------------------------------------------------------
 use strict;
 use warnings;
@@ -26,11 +27,11 @@ use Getopt::Std;
 use DateTime;
 use Date::Calc qw(Add_Delta_YMD);
 use Net::SFTP::Foreign;
-use Carp;
+use Carp;  
 
 # Flush output
-local $| = 1;
-
+local $| = 1;  
+  
 #- One process at a time ---------------------------------------------
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
 #open SELF, "> $lock_file" or croak "Could not create lock file $lock_file";
@@ -231,7 +232,7 @@ sub fatal_error {
 # Return array reference (do not return full blown array)
 #---------------------------------------------------------------------
 sub make_detail {
-    $g_log->info("Make detail records\n");
+    $g_log->info("Make detail records");
    my $sql = q{
 
 select              '64549' ||'|'||
@@ -328,9 +329,9 @@ SA.REGISTER_ID
                     # Change this to the actual SQL
 
     my $sth = $super_dbh->prepare($sql) or fatal_error("Cannot prepare $sql");
-    $g_log->info("prepare statement succeeded\n");
+    $g_log->info("prepare statement succeeded");
     $sth->execute;
-    $g_log->info("execute completed\n");    
+    $g_log->info("execute completed");    
     my @array = ();
     if ($DEBUG) {
         print "LOOK here detail\n";
@@ -339,7 +340,7 @@ SA.REGISTER_ID
         push(@array, $row);
         print $row." \n"  if ($DEBUG); 
     }
-        $g_log->info("push to detail completed\n");    
+        $g_log->info("push to detail completed");    
 
     my $data = \@array;    # get array reference
 
@@ -362,49 +363,10 @@ SA.REGISTER_ID
 ## Return array reference (do not return full blown array)
 ###-------------------------------------------------------------------
 sub make_header {
-    $g_log->info("Make header records\n");
+    $g_log->info("Make header records");
 
     my $data;
-   # my $sql = q{ select COUNT(*) ||'|'|| SUM(SD.QTY)||'|'|| to_char(SUM(SD.EXTENSION_AMOUNT),'fm9999999.90')||'|'|| 'MARINECORPSPERSONALFAMILYREAD' FROM  STYLES S, SALES SA, SALE_DETAILS SD, SITES_ALTRIA  A, V_DEPT_CLASS_SUBCLASS V, CHARACTERISTIC_VALUES cv, STYLE_CHARACTERISTICS SC, MERCH_CAL_MIKE_WEEK M WHERE S.BUSINESS_UNIT_iD = 30 AND S.BUSINESS_UNIT_ID = SA.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = SD.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = A.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = CV.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = M.BUSINESS_UNIT_ID AND S.STYle_ID = SD.STYLE_ID AND SA.SITE_ID = SD.SITE_ID AND SA.SALE_DATE = SD.SALE_DATE AND SA.SLIP_NO = SD.SLIP_NO AND SA.REGISTER_ID = SD.REGISTER_ID AND SA.SITE_ID = A.SITE_ID AND S.SECTION_ID = V.SECTION_ID AND S.STYLE_ID = SC.STYLE_ID AND SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID AND CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND V.DEPARTMENT_ID = '0991' and v.class_id IN ('1100','1200') AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1)) };
-my $sql = q{
-SELECT 
-    COUNT(*) || '|' || 
-    SUM(SD.QTY) || '|' || 
-    TO_CHAR(SUM(SD.EXTENSION_AMOUNT), 'fm9999999.90') || '|' || 
-    'MARINECORPSPERSONALFAMILYREAD' 
-FROM 
-    STYLES S,
-    SALES SA,
-    SALE_DETAILS SD,
-    SITES_ALTRIA A,
-    V_DEPT_CLASS_SUBCLASS V,
-    CHARACTERISTIC_VALUES CV,
-    STYLE_CHARACTERISTICS SC,
-    MERCH_CAL_MIKE_WEEK M
-WHERE 
-    S.BUSINESS_UNIT_ID = 30 
-    AND S.BUSINESS_UNIT_ID = SA.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = SD.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = A.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = CV.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_ID 
-    AND S.BUSINESS_UNIT_ID = M.BUSINESS_UNIT_ID 
-    AND S.STYLE_ID = SD.STYLE_ID 
-    AND SA.SITE_ID = SD.SITE_ID 
-    AND SA.SALE_DATE = SD.SALE_DATE 
-    AND SA.SLIP_NO = SD.SLIP_NO 
-    AND SA.REGISTER_ID = SD.REGISTER_ID 
-    AND SA.SITE_ID = A.SITE_ID 
-    AND S.SECTION_ID = V.SECTION_ID 
-    AND S.STYLE_ID = SC.STYLE_ID 
-    AND SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID 
-    AND CV.CHARACTERISTIC_TYPE_ID = 'BRAND' 
-    AND SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID 
-    AND SA.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE 
-    AND V.DEPARTMENT_ID = '0991' 
-    AND V.CLASS_ID IN ('1100', '1200') 
-    AND SA.SALE_DATE BETWEEN TRUNC(SYSDATE - (DOW + 7)) AND TRUNC(SYSDATE - (DOW + 1))};
+    my $sql = q{ select COUNT(*) ||'|'|| SUM(SD.QTY)||'|'|| to_char(SUM(SD.EXTENSION_AMOUNT),'fm9999999.90')||'|'|| 'MARINECORPSPERSONALFAMILYREAD' FROM  STYLES S, SALES SA, SALE_DETAILS SD, SITES_ALTRIA  A, V_DEPT_CLASS_SUBCLASS V, CHARACTERISTIC_VALUES cv, STYLE_CHARACTERISTICS SC, MERCH_CAL_MIKE_WEEK M WHERE S.BUSINESS_UNIT_iD = 30 AND S.BUSINESS_UNIT_ID = SA.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = SD.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = A.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = V.BUSINESS_UNIT_ID AND S.BUSINESS_UNIT_ID = CV.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_iD AND S.BUSINESS_UNIT_ID = M.BUSINESS_UNIT_ID AND S.STYle_ID = SD.STYLE_ID AND SA.SITE_ID = SD.SITE_ID AND SA.SALE_DATE = SD.SALE_DATE AND SA.SLIP_NO = SD.SLIP_NO AND SA.REGISTER_ID = SD.REGISTER_ID AND SA.SITE_ID = A.SITE_ID AND S.SECTION_ID = V.SECTION_ID AND S.STYLE_ID = SC.STYLE_ID AND SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID AND CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND V.DEPARTMENT_ID = '0991' and v.class_id IN ('1100','1200') AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1)) };
 
     $sql =~s/dow/$g_day_of_week/xg;
                     # Change this to the actual SQL
@@ -448,8 +410,8 @@ sub create_record {
     }
     close ($fh);
     my $fsize = -s $fileout;
-    $g_log->info("$filename created\n");
-    $g_log->info("$fsize bytes\n");
+    $g_log->info("$filename created");
+    $g_log->info("$fsize bytes ");
 
     return $filename;
 }
@@ -457,7 +419,7 @@ sub create_record {
 #---------------------------------------------------------------------
 sub push_to_altria {
     my $file = shift;
-    $g_log->info("Push $file to Altria sftp server\n");
+    $g_log->info("Push $file to Altria sftp server");
 
 # Server and authentication details
  my $hostname = $g_cfg->Altria->{sftpserver};
@@ -504,7 +466,7 @@ sub my_main {
         $g_log->level(4);
     }
 
-    $g_log->info("-- Start ----------------------------------------\n");
+    $g_log->info("-- Start ----------------------------------------");
 
     my $filename = create_record();
     push_to_altria($filename);
@@ -517,7 +479,7 @@ sub my_main {
     # example error bit
     # fatal_error("ERROR HERE!\n");
 
-    $g_log->info("-- End ------------------------------------------\n");
+    $g_log->info("-- End ------------------------------------------");
     return;
 } ## end sub my_main
 
@@ -541,3 +503,5 @@ eval { my_main();
 #---------------------------------------------------------------------
 # End program
 #---------------------------------------------------------------------
+
+

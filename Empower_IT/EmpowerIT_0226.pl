@@ -45,7 +45,8 @@ my $sm        = MCCS::WMS::Sendmail->new();
 my $error_lvl = 0;
 
 #my $host    = "hqm04ibisvr0010";
-my $baseDir = "/usr/local/mccs/data/empower_it/";
+#my $gbasedir = "/usr/local/mccs/data/empower_it/";
+#my $directory;
 my $filename;
 my $path_file;
 my $log = "/usr/local/mccs/log/empower_it/" . $date . "_empower_sales.log";
@@ -76,8 +77,11 @@ my $options = (
 );
 
 
-unless (-d ($gbasedir . "/archive") ) {          # Verify that we need the sub directory for Empower_it exists after moving to cloud.
-    make_path(($gbasedir . "/archive"));
+# unless (-d ($gbasedir . "/archive") ) {          # Verify that we need the sub directory for Empower_it exists after moving to cloud.
+#     make_path(($gbasedir . "/archive"));
+# }
+unless (-d "/usr/local/mccs/data/empower_it/archive") {              # Verify that we need the sub directory for Empower_it exists after moving to cloud.
+    make_path("/usr/local/mccs/data/empower_it/archive");
 }
 unless (-d "/usr/local/mccs/log/empower_it" ) {  # Verify that we need the sub directory for Empower_it exists after moving to cloud.
     make_path("/usr/local/mccs/log/empower_it");
@@ -85,9 +89,9 @@ unless (-d "/usr/local/mccs/log/empower_it" ) {  # Verify that we need the sub d
 unless (-d "/usr/local/mccs/tmp") {              # Verify that we need the sub directory for Empower_it exists after moving to cloud.
     make_path("/usr/local/mccs/tmp");
 }
-make_path($directory, {
-    mode => 0755
-});
+# "make_path($directory, {
+#     mode => 0755
+# });"
 #- One process at a time ---------------------------------------------
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
 my $SELF = IO::File->new($lock_file, 'w' ) or croak "Could not create lock file $lock_file";
@@ -133,7 +137,7 @@ sub mainLine {
           . sprintf( "%02d", $closedWeek->{merchandising_week} ) . '.csv';
 
         $path_file = $baseDir . $filename;
-#Commented out everything ...
+#TODO Commented out everything ...remove to just before log_debug
 #         if ( incompleteSalesBoolean($closedWeek) ) {
 #             if ( !$debug ) {    #warn will send email
 #                 log_warn(
@@ -229,7 +233,7 @@ sub createFile {
     my $fh;
     $fh = IO::File->new( $path_file, 'w' )
       or croak "Could not write $path_file because $!";
-
+    
     foreach my $rec_id ( keys %{$salesData} ) {
         my @data;
         for my $colname (@colOrder) {
@@ -242,6 +246,9 @@ sub createFile {
         my $line = join( '|', @data );
         print $fh $line;
         print $fh qq(\n);
+        #TODO remove next two lines.
+        print $line;
+        print qq(\n);
     }
 
     log_debug(qq(Done writing $path_file ));
@@ -279,11 +286,11 @@ sub sftpFiles {
 
         # Establish SFTP connection to server
         my $sftp;
-        #Next two lines comented as they are not used.
+        #TODO Next two lines comemnted as they are not used.
         # my $num_retry      = 10;  
         # my $successful_ftp = 'N';
         $sftp = Net::SFTP::Foreign->new( $dest, %arglist ) or croak "SFTP failed $!";
-        #Next three lines comented value for successful ftp is never changed.
+        #TODO Next three lines commented value for successful ftp is never changed.
         # if ( $successful_ftp eq 'N' ) {
         #     fatal_error("SFTP connection to NFI server ($dest) failed!");
         # }
