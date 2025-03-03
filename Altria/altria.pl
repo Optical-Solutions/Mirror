@@ -31,7 +31,7 @@ use Carp;
 
 # Flush output
 local $| = 1;  
-  
+my  $util = MCCS::MCE::Util->new();  
 #- One process at a time ---------------------------------------------
 my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
 #open SELF, "> $lock_file" or croak "Could not create lock file $lock_file";
@@ -122,7 +122,7 @@ my $g_log =
   IBIS::Log::File->new( { file => $g_logfile, append => 1, level => 4 } );
 my $g_host = "IBIS";
 chomp($g_host);
-my $g_mail = MCCS::WMS::Sendmail->new();
+#my $g_mail = MCCS::WMS::Sendmail->new();
 
 # Establish DB connection to RMS database
 #my $g_dbh = IBIS::DBI->connect( dbname => $g_dbname );
@@ -130,72 +130,72 @@ my $super_dbh = IBIS::DBI->connect( dbname =>'MVMS-Middleware-RdiUser');
 #---------------------------------------------------------------------
 # SUBS
 #---------------------------------------------------------------------
-sub send_mail_html {
-    my $msg_sub  = shift;
-    my $msg_bod1 = shift;
-    my $msg_bod2 = shift || '';
+# sub send_mail_html {
+#     my $msg_sub  = shift;
+#     my $msg_bod1 = shift;
+#     my $msg_bod2 = shift || '';
 
-    return if $g_verbose;    # Dont want to send email if on verbose mode
+#     return if $g_verbose;    # Dont want to send email if on verbose mode
 
-    my $css = <<"ECSS";
-<style>
-p, body {
-    color: #000000;
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-}
+#     my $css = <<"ECSS";
+# <style>
+# p, body {
+#     color: #000000;
+#     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+# }
 
-.e832_table_nh {
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    border-collapse: collapse;
-    border: 1px solid #69c;
-    margin-right: auto;
-    margin-left: auto;
-}
-.e832_table_nh caption {
-    background-color: #FFF;
-    font-size: 11pt;
-    font-weight: bold;
-    padding: 12px 17px 5px 17px;
-    color: #039;
-}
-.e832_table_nh th {
-    padding: 1px 4px 0px 4px;
-    background-color: RoyalBlue;
-    font-weight: normal;
-    font-size: 11px;
-    color: #FFF;
-}
-.e832_table_nh tr:hover td {
-    /*
-    color: #339;
-    background: #d0dafd;
-    padding: 2px 4px 2px 4px;
-    */
-}
-.e832_table_nh td {
-    padding: 2px 3px 1px 3px;
-    color: #000;
-    background: #fff;
-}
-</style>
-ECSS
+# .e832_table_nh {
+#     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+#     font-size: 11px;
+#     border-collapse: collapse;
+#     border: 1px solid #69c;
+#     margin-right: auto;
+#     margin-left: auto;
+# }
+# .e832_table_nh caption {
+#     background-color: #FFF;
+#     font-size: 11pt;
+#     font-weight: bold;
+#     padding: 12px 17px 5px 17px;
+#     color: #039;
+# }
+# .e832_table_nh th {
+#     padding: 1px 4px 0px 4px;
+#     background-color: RoyalBlue;
+#     font-weight: normal;
+#     font-size: 11px;
+#     color: #FFF;
+# }
+# .e832_table_nh tr:hover td {
+#     /*
+#     color: #339;
+#     background: #d0dafd;
+#     padding: 2px 4px 2px 4px;
+#     */
+# }
+# .e832_table_nh td {
+#     padding: 2px 3px 1px 3px;
+#     color: #000;
+#     background: #fff;
+# }
+# </style>
+# ECSS
 
-    my $fh = IO::File->new( "|/usr/sbin/sendmail -t", "w" ) or croak("Could not sendmail");
-    print $fh "To: " . $g_cust_emails->{'rdi'} . " \n";
-    print $fh "From: rdistaff\@usmc-mccs.org\n";
-    print $fh "Cc: " . $g_emails->{'Hanny'} . " \n";
-    print $fh "Cc: " . $g_emails->{'kaveh'} . " \n";
-    print $fh "Cc: " . $g_emails->{'Mike'} . " \n";
-    print $fh "Subject: $msg_sub \n";
-    print $fh "Content-Type: text/html; charset=ISO-8859-1\n\n" . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
-    print $fh "\n";
-    print $fh "\n";
-    print $fh "Server: $g_host\n";
-    print $fh "\n";
-    print $fh "\n";
-    return;
-} ## end sub send_mail_html
+#     my $fh = IO::File->new( "|/usr/sbin/sendmail -t", "w" ) or croak("Could not sendmail");
+#     print $fh "To: " . $g_cust_emails->{'rdi'} . " \n";
+#     print $fh "From: rdistaff\@usmc-mccs.org\n";
+#     print $fh "Cc: " . $g_emails->{'Hanny'} . " \n";
+#     print $fh "Cc: " . $g_emails->{'kaveh'} . " \n";
+#     print $fh "Cc: " . $g_emails->{'Mike'} . " \n";
+#     print $fh "Subject: $msg_sub \n";
+#     print $fh "Content-Type: text/html; charset=ISO-8859-1\n\n" . "<html><head>$css</head><body>$msg_bod1 $msg_bod2</body></html>";
+#     print $fh "\n";
+#     print $fh "\n";
+#     print $fh "Server: $g_host\n";
+#     print $fh "\n";
+#     print $fh "\n";
+#     return;
+# } ## end sub send_mail_html
 
 #---------------------------------------------------------------------
 # sub send_mail {
@@ -420,17 +420,25 @@ sub create_record {
 sub push_to_altria {
     my $file = shift;
     $g_log->info("Push $file to Altria sftp server");
-
+my $token         = 'MVMS-Middleware-Altria-SFTP';
+my $sftpHash      = $util->getsecret($token);
 # Server and authentication details
- my $hostname = $g_cfg->Altria->{sftpserver};
+ my $hostname      = $sftpHash->{host};;
  #print "hostname is $hostname \n";
- my $username = $g_cfg->Altria->{user};
- my $password = $g_cfg->Altria->{pw};
+ my $username      = $sftpHash->{user};
+ my $password      = $$sftpHash->{pw};
 
  # Local file path and remote destination
  my $local_path =   $g_txt_d . '/' . $file;
  my $remote_path = $g_cfg->Altria->{sftp_dir} . '/' . $file;
  #print sftp_dir;
+
+#TODO remove next 5 lines.
+#Testing for configuration values, next four lines.
+print "Host is " . $hostname . "\n";
+print "User is " . $username} . "\n"
+print "Password is " . $password . "\n"
+#########
 
  # Create an SFTP object
  my $sftp = Net::SFTP::Foreign->new($hostname, user => $username, password => $password);
@@ -470,11 +478,11 @@ sub my_main {
 
     my $filename = create_record();
     push_to_altria($filename);
-    send_mail_html(
-        "Altria Successful Transmision Notification " . $g_ymd,
-        "Number of Records = " . $g_count,
-        ""
-    );
+    # send_mail_html(
+    #     "Altria Successful Transmision Notification " . $g_ymd,
+    #     "Number of Records = " . $g_count,
+    #     ""
+    # );
 
     # example error bit
     # fatal_error("ERROR HERE!\n");
@@ -503,5 +511,6 @@ eval { my_main();
 #---------------------------------------------------------------------
 # End program
 #---------------------------------------------------------------------
+
 
 

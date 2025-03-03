@@ -60,9 +60,6 @@ my $merch_sw      = 0;
 my $merch_year;
 my $merch_week;
 
-
-#my $token= 'MVMS-Middleware-EmpowerIT-SFTP';
-#my $secret=$Util->getsecret($token);
 my $options = (
     GetOptions(
         'debug'      => \$debug,
@@ -76,7 +73,7 @@ my $options = (
     )
 );
 
-
+my $baseDir = "/usr/local/mccs/data/empower_it/";
 # unless (-d ($gbasedir . "/archive") ) {          # Verify that we need the sub directory for Empower_it exists after moving to cloud.
 #     make_path(($gbasedir . "/archive"));
 # }
@@ -261,7 +258,7 @@ sub sftpFiles {
     my $sftpInput_Hash = $cfg->empowerit_v2->{sftp};
     #my $sftpHash=$Util->getsecret('sftp');
     my $token= 'MVMS-Middleware-EmpowerIT-SFTP';
-    my $sftpHash=$Util->getsecret($token);
+    my $sftpHash = $util->getsecret($token);
     if ( !$suppress_send ) {
         my %arglist;
         my $dest     = $sftpHash->{host};
@@ -269,13 +266,14 @@ sub sftpFiles {
 
         # Retrieve MCL user name and password
         $arglist{user}     = $sftpHash->{user};
-        $arglist{password} = $sftpHash->{password};
-        
+        $arglist{password} = $sftpHash->{pw};
+
+        #TODO remove next 6 lines.        
         #Testing for configuration values, next four lines.
         print "DEST is " . $dest . "\n";
         print "inputDir is " . $inputDir . "\n"
         print "User is " . $arglist{user} . "\n"
-        print "Password is " . $arglist{password} . "\n"
+        print "Password is " . $arglist{pw} . "\n"
         #########
 
         #$arglist{port}     = $sftpHash->{port};
