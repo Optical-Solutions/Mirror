@@ -40,6 +40,7 @@ sub new {
         },
         $class
     );
+    return $self;
 }
 
 
