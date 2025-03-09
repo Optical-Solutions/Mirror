@@ -250,7 +250,7 @@ sub make_detail {
                     SD.STYLE_ID||'|'||
                     SD.BAR_CODE_ID||'|'||
                     S.DESCRIPTION||'|'||
-                    CASE WHEN V.DEPARTMENT_ID = '0992' AND V.CLASS_ID = '2000' THEN 'DIFF'
+                    CASE WHEN V.DEPARTMENT_ID = '9002' AND V.CLASS_ID = '2000' THEN 'DEPARTMENT 9002:CLASS 2000'
                          WHEN V.CLASS_ID = '1100' AND STYLE_TYPE = 'MULTI' THEN 'CARTON'
                          WHEN V.CLASS_ID = '1100' AND STYLE_TYPE = 'SINGLE' THEN 'PACK'
                          WHEN V.CLASS_ID = '1200' AND STYLE_TYPE = 'MULTI' THEN 'SLEEVE'
@@ -309,7 +309,7 @@ JOIN V_DEPT_CLASS_SUBCLASS V
     AND (
           (V.DEPARTMENT_ID = '0991' AND V.CLASS_ID IN ('1100','1200')) 
           OR 
-          (V.DEPARTMENT_ID = '0992' AND V.CLASS_ID = '2000')
+          (V.DEPARTMENT_ID = '9002' AND V.CLASS_ID = '2000')
         )
 JOIN STYLE_CHARACTERISTICS SC 
     ON S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_ID
@@ -409,7 +409,7 @@ WHERE               S.BUSINESS_UNIT_iD = 30 AND
                     Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND
                     V.DEPARTMENT_ID = '0991' and (
                     v.class_id IN ('1100','1200')
-                    or (V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000')))
+                    or (V.DEPARTMENT_ID = '9002' and v.class_id IN ('2000')))
                     AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1))
 
 };    #and rownum < 10
