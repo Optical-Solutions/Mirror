@@ -312,7 +312,8 @@ JOIN V_DEPT_CLASS_SUBCLASS V
           (V.DEPARTMENT_ID = '0992' AND V.CLASS_ID = '2000')
         )
 JOIN STYLE_CHARACTERISTICS SC 
-
+    ON S.BUSINESS_UNIT_ID = SC.BUSINESS_UNIT_ID
+    AND S.STYLE_ID = SC.STYLE_ID
 join CHARACTERISTIC_VALUES cv on (Sc.business_unit_id = cv.business_unit_id and
                                   SC.CHARACTERISTIC_TYPE_ID = CV.CHARACTERISTIC_TYPE_ID AND
                                   CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND
