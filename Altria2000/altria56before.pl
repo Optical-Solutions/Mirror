@@ -29,9 +29,9 @@ use Net::SFTP::Foreign;
 $| = 1;
 
 #- One process at a time ---------------------------------------------
-my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
-open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
-flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
+# my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+# open SELF, "> $lock_file" or die "Could not create lock file $lock_file";
+# flock SELF, LOCK_EX | LOCK_NB or die "Another $0 process already running";
 
 #- Get option switches -----------------------------------------------
 our %g_opt = ( d => 0 );
