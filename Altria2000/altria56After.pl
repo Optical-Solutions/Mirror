@@ -406,9 +406,9 @@ WHERE               S.BUSINESS_UNIT_iD = 30 AND
                     CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND
                     SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND
                     Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND
-                    V.DEPARTMENT_ID = '0991' and
+                    V.DEPARTMENT_ID = '0991' and (
                     v.class_id IN ('1100','1200')
-                    or (V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000'))
+                    or (V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000')))
                     AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1))
 
 };    #and rownum < 10
