@@ -1,0 +1,374 @@
+#!/usr/local/bin/perl
+#---------------------------------------------------------
+# Ported by:
+# Date:
+# Desc:
+#---------------------------------------------------------
+
+use strict;
+use warnings;
+use Getopt::Long;
+use DateTime;
+use Data::Dumper;
+use Class::Inspector;
+use Pod::Usage;
+use Net::SFTP::Foreign;
+use File::Path   qw(make_path);
+use File::Copy   qw(move);
+use File::Remove qw(remove);
+use File::Spec;
+use File::Basename;
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+use Carp;
+use Readonly;
+use Fcntl qw(:flock);
+use MCCS::Config;
+use MCCS::WMS::Sendmail;
+use IBIS::Log::File;
+use IO::File;
+use lib "/usr/local/mccs/pm";
+require IBIS::EmpowerIT::Query;
+IBIS::EmpowerIT::Query->import();
+
+#-----------------------------------------------
+# Define Variables
+#-----------------------------------------------
+my  $util = MCCS::MCE::Util->new();
+my $cfg      = MCCS::Config->new();
+#my $g_dbname = $cfg->empowerit_v2->{DBNAME};
+my $g_dbname = IBIS::DBI->connect( dbname =>'MVMS-Middleware-RdiUser');
+my $dt        = DateTime->now();
+my $year      = $dt->strftime('%Y');
+my $yearMonth = $dt->strftime('%Y%m');
+my $date      = $dt->strftime('%Y%m%d');
+my $ts        = $dt->strftime('%H%M');
+my $timestamp = $dt->strftime('%Y%m%d %H%M%S');
+
+my $sm        = MCCS::WMS::Sendmail->new();
+my $error_lvl = 0;
+
+#my $host    = "hqm04ibisvr0010";
+#my $gbasedir = "/usr/local/mccs/data/empower_it/";
+#my $directory;
+my $filename;
+my $path_file;
+my $log = "/usr/local/mccs/log/empower_it/" . $date . "_empower_sales.log";
+my $g_long_date = $timestamp;
+
+my $debug;
+my $suppress_send = 0;
+my $archive_sw    = 0;
+my $force_sw      = 0;
+my $merch_sw      = 0;
+my $merch_year;
+my $merch_week;
+
+my $options = (
+    GetOptions(
+        'debug'      => \$debug,
+        'log=s'      => \$log,
+        'database=s' => \$g_dbname,
+        'week=s'     => \$merch_week,
+        'year=s'     => \$merch_year,
+        'nosend'     => \$suppress_send,
+        'archive'    => \$archive_sw,
+        'force'      => \$force_sw,
+    )
+);
+
+my $baseDir = "/usr/local/mccs/data/empower_it/";
+
+unless (-d "/usr/local/mccs/data/empower_it/archive") {
+    make_path("/usr/local/mccs/data/empower_it/archive");
+}
+unless (-d "/usr/local/mccs/log/empower_it" ) {
+    make_path("/usr/local/mccs/log/empower_it");
+}
+unless (-d "/usr/local/mccs/tmp") {
+    make_path("/usr/local/mccs/tmp");
+}
+
+my $lock_file = "/usr/local/mccs/tmp/" . basename($0) . ".lck";
+my $SELF = IO::File->new($lock_file, 'w' ) or croak "Could not create lock file $lock_file";
+flock $SELF, LOCK_EX | LOCK_NB or croak "Another $0 process already running";
+if ( -e $lock_file ) { croak "Another $0 process already running" }
+
+
+--
+#- Log and DB connection
+my $log_obj = IBIS::Log::File->new( { file => $log, append => 1 } );
+
+#----MY IBIS::DBI ---#
+print "debug calling query new\n";
+my $dataAccess = IBIS::EmpowerIT::Query->new(
+    AutoCommit => 1,
+    logFileRef => $log_obj,
+    dbname     => $g_dbname,
+    debug      => $debug
+);
+print "debug object created\n";
+#--------------------#
+log_debug("Started");
+log_debug( "Database: ", Dumper $dataAccess );
+
+sub mainLine {
+    log_debug( "Logfile: ", $log );
+
+    if ( $merch_week && $merch_year ) {
+        $filename = $merch_year . '-' . sprintf( "%02d", $merch_week ) . '.csv';
+        $path_file = $baseDir . $filename;
+        $merch_sw  = 1;
+
+    }
+    else {
+        my $currWeek =
+          $dataAccess->get_record( dataSource => 'getCurrMerchWeek', );
+        log_debug( "Current Week: ", Dumper $currWeek );
+
+        my $closedWeek =
+          $dataAccess->get_record( dataSource => 'getLastClosedWeek' );
+        log_debug( "Closed Week: ", Dumper $closedWeek );
+
+        $filename = $year . '-'
+          . sprintf( "%02d", $closedWeek->{merchandising_week} ) . '.csv';
+
+        $path_file = $baseDir . $filename;
+
+        log_debug(
+qq( All Sales have been processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date}  )
+        );
+    }
+    createFile();
+
+    sftpFiles($filename);
+    archiveFiles($filename);
+    return;
+}
+
+sub incompleteSalesBoolean {
+    my $closedWeek      = shift;
+    my $incompleteSales = $dataAccess->get_record(
+        dataSource => 'boolIncompleteSale',
+        week_start_date  => $closedWeek->{week_ending_date},
+        week_ending_date => $closedWeek->{week_ending_date},
+    );
+
+    #--returns true or greater than zero if incomplete sales are found for closed week--#
+    return $incompleteSales->{incomplete_sales};
+}
+
+sub createFile {
+    my $salesData;
+    if ($merch_sw) {
+        $salesData = $dataAccess->get_record(
+            dataSource => 'getSalesDataMerch',
+            merch_week => $merch_week,
+            merch_year => $merch_year,
+        );
+    }
+    else {
+        $salesData = $dataAccess->get_record( dataSource => 'getSalesData', );
+    }
+
+    #Want the same order everytime.. Never trust a hash and its ordering
+    my @colOrder =
+      qw(merchandising_year merchandising_period merchandising_week week_ending_date site_id
+      name bar_code_id description department_id dept_name class_id class_descr sub_class_id
+      sub_class_descr qty extension_amount);
+    my $fh;
+    $fh = IO::File->new( $path_file, 'w' )
+      or croak "Could not write $path_file because $!";
+    
+    foreach my $rec_id ( keys %{$salesData} ) {
+        my @data;
+        for my $colname (@colOrder) {
+            my $value = $salesData->{$rec_id}->{$colname};
+            $value = qq("$value")
+              if ( ( $salesData->{$rec_id}->{punct_flg} )
+                && ( lc($colname) eq 'description' ) );
+            push @data, qq($value);
+        }
+        my $line = join( '|', @data );
+        print $fh $line;
+        print $fh qq(\n);
+    }
+
+    log_debug(qq(Done writing $path_file ));
+    return;
+}
+#- Log and DB connection
+my $log_obj = IBIS::Log::File->new( { file => $log, append => 1 } );
+
+#----MY IBIS::DBI ---#
+print "debug calling query new\n";
+my $dataAccess = IBIS::EmpowerIT::Query->new(
+    AutoCommit => 1,
+    logFileRef => $log_obj,
+    dbname     => $g_dbname,
+    debug      => $debug
+);
+print "debug object created\n";
+#--------------------#
+log_debug("Started");
+log_debug( "Database: ", Dumper $dataAccess );
+
+sub mainLine {
+    log_debug( "Logfile: ", $log );
+
+    if ( $merch_week && $merch_year ) {
+        $filename = $merch_year . '-' . sprintf( "%02d", $merch_week ) . '.csv';
+        $path_file = $baseDir . $filename;
+        $merch_sw  = 1;
+
+    }
+    else {
+        my $currWeek =
+          $dataAccess->get_record( dataSource => 'getCurrMerchWeek', );
+        log_debug( "Current Week: ", Dumper $currWeek );
+
+        my $closedWeek =
+          $dataAccess->get_record( dataSource => 'getLastClosedWeek' );
+        log_debug( "Closed Week: ", Dumper $closedWeek );
+
+        $filename = $year . '-'
+          . sprintf( "%02d", $closedWeek->{merchandising_week} ) . '.csv';
+
+        $path_file = $baseDir . $filename;
+
+        log_debug(
+qq( All Sales have been processed for $closedWeek->{week_start_date} thru $closedWeek->{week_ending_date}  )
+        );
+    }
+    createFile();
+
+    sftpFiles($filename);
+    archiveFiles($filename);
+    return;
+}
+
+sub incompleteSalesBoolean {
+    my $closedWeek      = shift;
+    my $incompleteSales = $dataAccess->get_record(
+        dataSource => 'boolIncompleteSale',
+        week_start_date  => $closedWeek->{week_ending_date},
+        week_ending_date => $closedWeek->{week_ending_date},
+    );
+
+    #--returns true or greater than zero if incomplete sales are found for closed week--#
+    return $incompleteSales->{incomplete_sales};
+}
+
+sub createFile {
+    my $salesData;
+    if ($merch_sw) {
+        $salesData = $dataAccess->get_record(
+            dataSource => 'getSalesDataMerch',
+            merch_week => $merch_week,
+            merch_year => $merch_year,
+        );
+    }
+    else {
+        $salesData = $dataAccess->get_record( dataSource => 'getSalesData', );
+    }
+
+    #Want the same order everytime.. Never trust a hash and its ordering
+    my @colOrder =
+      qw(merchandising_year merchandising_period merchandising_week week_ending_date site_id
+      name bar_code_id description department_id dept_name class_id class_descr sub_class_id
+      sub_class_descr qty extension_amount);
+    my $fh;
+    $fh = IO::File->new( $path_file, 'w' )
+      or croak "Could not write $path_file because $!";
+    
+    foreach my $rec_id ( keys %{$salesData} ) {
+        my @data;
+        for my $colname (@colOrder) {
+            my $value = $salesData->{$rec_id}->{$colname};
+            $value = qq("$value")
+              if ( ( $salesData->{$rec_id}->{punct_flg} )
+                && ( lc($colname) eq 'description' ) );
+            push @data, qq($value);
+        }
+        my $line = join( '|', @data );
+        print $fh $line;
+        print $fh qq(\n);
+    }
+
+    log_debug(qq(Done writing $path_file ));
+    return;
+}
+# sub send_mail {
+#     my @body = @_;    #Just going to put every thing in the body good or bad
+
+#     my $emails;
+
+#     #$emails->{larry} ='larry.d.lewis@usmc-mccs.org';
+#     $emails = $cfg->empowerit_v2->{emails};
+
+#     $sm->subject( 'EmpowerIT - RMS Sales Data ' . $g_long_date );
+#     $sm->sendTo($emails);
+#     $sm->msg(@body);
+#     $sm->logObj($log_obj);
+#     $sm->verboseLevel($debug);
+#     $sm->hostName($host);
+#     $sm->attachments($log);
+
+#     $sm->send_mail_attachment();
+#     return;
+# }
+
+#---------------------------------------------------------------------
+# Error Handling and Logging Functions
+#---------------------------------------------------------------------
+
+sub log_debug {
+    my $str       = shift;
+    my $log_entry = join( '', "(PID $$) ", $str );
+    if ($log_obj) { $log_obj->info($log_entry); }
+    debug($log_entry);
+    return;
+}
+
+sub log_warn {
+    my $str       = shift;
+    my $log_entry = join( '', "(PID $$) ", $str );
+    $sm->errorLevel('warning');
+    #send_mail( "WARNING on " . __FILE__ . ' ' . $g_long_date, $log_entry );
+    if ($log_obj) { $log_obj->warn($log_entry); }
+    debug($log_entry);
+    return;
+}
+
+sub fatal_error {
+    my $str = shift;
+    $sm->errorLevel('error');
+    my $log_entry = join( '', "(PID $$) ", $str );
+    #send_mail( "ERROR on " . __FILE__ . ' ' . $g_long_date, $log_entry );
+    if ($log_obj) { $log_obj->error($log_entry); }
+    croak $log_entry;
+}
+
+sub debug {
+    my $str = shift;
+    if ($debug) {
+        print "DEBUG: ", $str, "\n";
+    }
+    return;
+}
+
+#---------------------------------------------------------------------
+# MAIN PROGRAM - Do not modify main below.
+# Use the main above aka my_main
+#---------------------------------------------------------------------
+
+# Want to catch warning
+#$SIG{__WARN__} = sub { log_warn("@_") };
+
+# Execute the main
+mainLine();
+unlink($lock_file);
+
+#---------------------------------------------------------------------
+# End program
+#---------------------------------------------------------------------
+

@@ -7,6 +7,7 @@
 package IBIS::EmpowerIT::Query;
 
 use strict;
+use warnings;
 use Carp;
 use base qw(IBIS::xController::DataAccessor);
 use IBIS::Log::File;
@@ -27,8 +28,13 @@ our (@EXPORT_OK, %EXPORT_TAGS);
 # Hey what I am calling in the BASE has the missing link that
 # makes this all work so easily.... Code once, Use Anywhere, 
 #--------------------------------------------------------------------------
+sub new { 
+    my ($class, %params) = @_; 
+    print "DEBUG: Calling DataAccessor->new()\n"; 
+    my $self = $class->SUPER::new(%params); # Call parent class (DataAccessor) 
+    return bless $self, $class; }  
 
-sub get_record {
+sub get_record {## no critic qw(Subroutines::RequireArgUnpacking)
     my $self = shift;
     my %params = @_;
         
@@ -126,7 +132,7 @@ return $sql;
 
  }
  
-  sub get_sales_data {
+  sub get_sales_data {## no critic qw(Subroutines::RequireArgUnpacking)
     my $self = shift;
     my %params = @_;
          
