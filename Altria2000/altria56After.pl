@@ -91,7 +91,7 @@ for( my $i = 0; $g_day_of_week == -1 && $i < 7; $i++ ) {
     }
 }
 #TODO Setting day to Sunday on next line for testing.
-$g_day_of_week = 0;
+$g_day_of_week = 1;
 
 my @endDates = Add_Delta_YMD($startYear, $startMonth, $startDay, 0, 0, -($g_day_of_week+1)); # Adjust to last Saturday
 
@@ -407,9 +407,9 @@ WHERE               S.BUSINESS_UNIT_iD = 30 AND
                     CV.CHARACTERISTIC_TYPE_ID = 'BRAND' AND
                     SC.CHARACTERISTIC_VALUE_ID = CV.CHARACTERISTIC_VALUE_ID AND
                     Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND
-                    V.DEPARTMENT_ID = '0991' and (
-                    v.class_id IN ('1100','1200')
-                    or (V.DEPARTMENT_ID = '0992' and v.class_id IN ('2000')))
+                    ((V.DEPARTMENT_ID = '0991' and 
+                    v.class_id IN ('1100','1200'))
+                    or (V.DEPARTMENT_ID = '0992' and v.class_id = '2000'))
                     AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1))
 
 };    #and rownum < 10
