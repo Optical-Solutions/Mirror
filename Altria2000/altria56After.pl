@@ -330,7 +330,7 @@ SA.REGISTER_ID
     };
 
 
-    $sql =~s/dow/$g_day_of_week/g;
+    $sql =~s/dow/2/g;
                     # Change this to the actual SQL
 
     my $sth = $g_dbh->prepare($sql) or fatal_error("Cannot prepare $sql");
@@ -413,7 +413,7 @@ WHERE               S.BUSINESS_UNIT_iD = 30 AND
                     AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1))
 
 };    #and rownum < 10
-    $sql =~s/dow/$g_day_of_week/g;
+    $sql =~s/dow/2/g;
                     # Change this to the actual SQL
 #$sql = "select sysdate from dual";
     my $sth = $g_dbh->prepare($sql) or fatal_error("Cannot prepare $sql");
