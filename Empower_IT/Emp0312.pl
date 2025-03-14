@@ -283,7 +283,12 @@ sub sftpFiles {
         #TODO I commented next line
 
         #$sftp = Net::SFTP::Foreign->new( $sftp_server, user => $username, password => $password ) or croak "SFTP failed $!";  
-        my $sftp = Net::SFTP::Foreign->new(
+        #TODO remove next 4 lines after testing.
+        $secret->{'username'} = "namcxd32ftp";
+        $secret->{'password'} = "RjodM9xv";
+        $sftp_server = "sftpna.iriworldwide.com";
+        $secret->{'port'} = '22';
+                my $sftp = Net::SFTP::Foreign->new(
                         $sftp_server,
                         user     => $secret->{'username'} || $secret->{'user'},
                         password => $secret->{'password'} || $secret->{'pw'},
@@ -295,19 +300,19 @@ sub sftpFiles {
         #     fatal_error("SFTP connection to NFI server ($sftp_server) failed!");
         # }
 
-        # foreach my $zFile (@zFiles) {
-        #     $sftp->put(
-        #         $baseDir . $zFile, $inputDir . '/' . $zFile,
-        #         copy_perms => 0,
-        #         copy_time  => 0,
-        #         atomic     => 1
-        #     );
-        #     if ( $sftp->error ) {
-        #         log_warn("$zFile could not be sent");
-        #     }
-        # }
-         my @output = $sftp->ls();
-         print Dumper \@output;
+        foreach my $zFile (@zFiles) {
+            $sftp->put(
+                $baseDir . $zFile, $inputDir . '/' . $zFile,
+                copy_perms => 0,
+                copy_time  => 0,
+                atomic     => 1
+            );
+            if ( $sftp->error ) {
+                log_warn("$zFile could not be sent");
+            }
+        }
+        #  my @output = $sftp->ls();
+        #  print Dumper \@output;
         log_debug('SFTP transfer completed');
     }
     else {
