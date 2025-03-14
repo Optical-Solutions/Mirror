@@ -432,9 +432,9 @@ sub push_to_altria {
         print "ERROR: Username is missing or get_secret failed!\n";
     }
     if ($sftpHash) {
-        print "DEBUG: Hostname: " . ($sftpHash->{host} // "N/A") . "\n";
-        print "DEBUG: Username: " . ($sftpHash->{user} // "N/A") . "\n";
-        print "DEBUG: Password: " . ($sftpHash->{password} // "N/A") . "\n";
+        print "DEBUG: Hostname: " . ($sftpHash->{host} || "N/A") . "\n";
+        print "DEBUG: Username: " . ($sftpHash->{user} || "N/A") . "\n";
+        print "DEBUG: Password: " . ($sftpHash->{password} || "N/A") . "\n";
     } else {
         print "ERROR: Failed to retrieve secret!\n";
     }
