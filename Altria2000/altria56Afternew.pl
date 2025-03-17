@@ -251,10 +251,10 @@ select '64549' || '|' || TO_CHAR(
           AND STYLE_TYPE = 'SINGLE' THEN 'CAN'
           wHEN V.DEPARTMENT_ID = '0992'
           AND V.CLASS_ID = '2000'
-          AND STYLE_TYPE = 'MULTI' THEN 'CARTON'
+          AND STYLE_TYPE = 'MULTI' THEN '09922000'
           WHEN V.DEPARTMENT_ID = '0992'
           AND V.CLASS_ID = '2000'
-          AND STYLE_TYPE = 'SINGLE' THEN 'EA'
+          AND STYLE_TYPE = 'SINGLE' THEN '09922000'
           ELSE 'EA'
      END || '|' || SD.QTY || '|' || CASE
           WHEN STYLE_TYPE = 'MULTI' THEN (
