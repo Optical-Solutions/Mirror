@@ -394,7 +394,7 @@ WHERE               S.BUSINESS_UNIT_iD = 30 AND
                     Sa.SALE_DATE BETWEEN M.WEEK_STARTING_DATE AND M.WEEK_ENDING_DATE AND
                     ( ((V.DEPARTMENT_ID = '0991' and
                     v.class_id IN ('1100','1200')) or
-                    (v.department_id = '0992' and v.class_id = '2000' and style_type!='REGULAR'))) and
+                    (v.department_id = '0992' and v.class_id = '2000' and style_type!='REGULAR'))) 
                     AND sa.sale_date between trunc(sysdate-(dow+7)) and trunc(sysdate -(dow+1)) 
                     }; 
    #and rownum < 10
