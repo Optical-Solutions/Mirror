@@ -1,5 +1,10 @@
 select '64549' || '|' || TO_CHAR(
-     m.week_ending_date, 'YYYYMMDD') || '|' || TO_CHAR(SD.SALE_DATE, 'YYYYMMDD') || '|' || TO_CHAR(SA.SALE_DATE_TIME, 'HH24:MI:SS') || '|' || SA.SITE_ID || SA.SLIP_NO || SA.REGISTER_ID || '|' || SA.SITE_ID || '|' || A.NAME || '|' || A.ADDRESS_2 || '|' || A.CITY || '|' || A.STATE_ID || '|' || A.ZIP_CODE || '|' || V.SUB_CLASS_DESCR || '|' || CV.DESCRIPTION || '|' || SD.STYLE_ID || '|' || SD.BAR_CODE_ID || '|' || S.DESCRIPTION || '|' || CASE
+     m.week_ending_date, 'YYYYMMDD') || '|' || TO_CHAR(SD.SALE_DATE, 'YYYYMMDD') || '|' 
+     || TO_CHAR(SA.SALE_DATE_TIME, 'HH24:MI:SS') || '|' || SA.SITE_ID || SA.SLIP_NO || SA.REGISTER_ID 
+     || '|' || SA.SITE_ID || '|' || A.NAME || '|' || A.ADDRESS_2 || '|' || A.CITY || '|' || A.STATE_ID 
+     || '|' || A.ZIP_CODE || '|' || V.SUB_CLASS_DESCR || '|' || CV.DESCRIPTION || '|' || SD.
+      
+     || '|' || SD.BAR_CODE_ID || '|' || S.DESCRIPTION || '|' || CASE
           WHEN v.department_id = '0991'
    
           and V.CLASS_ID = '1100'
