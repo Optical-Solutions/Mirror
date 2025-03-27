@@ -86,17 +86,24 @@ $g_txfile = $g_txfile . "_$ts";
 my $g_max_mtime;
 my $g_remote_file_mtime;
 my $g_cif;
-sub create_missing_directotry {
-    my $dirname = shift;
-    unless ( -d $dirname ) {
-        mkpath($dirname);
-    }   
+
+
+
+sub make_dir {
+    my $d = shift;
+    unless ( -d $d ) {
+        my $result = eval { mkpath($d); 1 } // 0;
+        if (!$result || $@) {
+            fatal_error("Could not create directory $d, $@\n");
+        }
+    }
+    return 1;
 }
 
-create_missing_directotry($g_archive_dir );
-create_missing_directotry($g_download_dir );
-create_missing_directotry($g_encrypt_dir);
-create_missing_directotry($log_dir);
+make_dir($g_archive_dir );
+make_dir($g_download_dir );
+make_dir($g_encrypt_dir);
+make_dir($log_dir);
 
 if ($g_verbose) {
     print Dumper $g_emails;
