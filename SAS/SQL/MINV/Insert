@@ -1,0 +1,5 @@
+maxdata.t_hist_'||iSessionId||
+maxdata.mplan_working
+maxdata.merch_ids8_with_minv
+maxdata.merch_ids7_with_minv
+maxdata.merch_ids6_with_minv
