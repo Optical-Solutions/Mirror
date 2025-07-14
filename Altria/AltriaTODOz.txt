@@ -1,0 +1,5 @@
+set up message type to be html?
+get mail to fields (poeple) from .cfg file.
+need emails parameters
+need subject parameter
+need msg parameter

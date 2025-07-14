@@ -42,7 +42,7 @@ my $DEBUG = $g_opt{d};  # if you pass -d on the command line it is on debug mode
 my $g_cfg = new MCCS::Config;
 
 my $g_emails      = $g_cfg->Altria->{tech_emails};
-my $g_cust_emails = $g_cfg->Altria->{customer_emails};
+my $g_cust_emails = $g_cfg->Altria->{customer_email};
 my $g_dbname      = $g_cfg->Altria->{RMS};
 my $g_base_d      = "/tmp/altria1";
 my $g_txt_d       = "/tmp/altria1";
