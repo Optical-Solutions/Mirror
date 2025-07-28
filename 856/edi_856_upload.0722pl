@@ -1,0 +1,399 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use IBIS::EDI;
+use Getopt::Std;
+use POSIX qw(strftime WNOHANG);
+use IBIS::DBI;
+use Getopt::Long;
+use MCCS::MCE::Util;
+use Carp;
+use File::Copy;
+use File::Path;
+use Net::SFTP::Foreign;
+use Sys::Hostname;
+local $| = 1; 
+#--------------------------------------------------------subroutines ##############
+sub zprint {
+    my $str = shift;
+    print "$str\n";
+
+    return 1;
+}
+#-------------------------------------------------------------------
+my ( $config, $debug, $edi, $help, $hostname, $ret_fetched, $only_download, $init, $g_test );
+
+## Options
+my $opt_result = GetOptions(
+    "debug"         => \$debug,         
+    "help"          => \$help,
+    "only_download" => \$only_download,
+    "init"          => \$init,
+    "test"          => \$g_test
+);                                        
+
+$hostname = hostname;
+$config   = '/usr/local/mccs/etc/edi_856/edi_856_to_spscommerce.config';
+unless ( -e $config ) {
+    croak("Missing $config file \n");
+}
+
+## config file, object, db connections
+$edi = IBIS::EDI->new( conf_file => $config );
+
+# Global test we get data on SPS on /testout dir
+# instead of /out dir, which is production.
+# we assign the value in the config to REMOTE_DIR
+if ($g_test) {
+    $edi->{REMOTE_DIR} = $edi->{REMOTE_DIR_TEST};
+    print "Using REMOTE_DIR_TEST: " . $edi->{REMOTE_DIR_TEST} . "\n";
+}
+$edi->{REMOTE_DIR} = $edi->{REMOTE_DIR_TEST};
+
+my $now = strftime( '%Y_%m_%d_%H_%M', localtime );
+
+print("\n-------------------------Started at:$now ---------------------------------\n");
+zprint("Making directories");
+mkpath($edi->{'FTP_STAGING_DIR'});
+mkpath($edi->{'FTP_STAGING_DIR_BKUP'});
+mkpath($edi->{'FTP_NORMALIZE_DIR'});
+
+## Fetch files from remote (sps) to local machine
+my $rf = [];
+my $fail_connect = '';
+my $util = MCCS::MCE::Util->new();
+my $secret_name = 'MVMS-Middleware-SPS-DLA-SFTP';
+my $secret = $util->get_secret($secret_name);
+
+
+$rf = get_remote_file_list();
+my $num = @$rf;
+zprint("Total files in SPS: $num");
+
+remove_files_in_dir($edi->{'FTP_STAGING_DIR'}) if $init;
+
+if ( @$rf > 0 ) {
+    zprint("Change current dir to " . $edi->{'FTP_STAGING_DIR'});
+    chdir( $edi->{'FTP_STAGING_DIR'} ) or croak("Could not CD to ". $edi->{'FTP_STAGING_DIR'} . "coz $!");
+    zprint("Fetch each file in the list, delete one that has been sucessfully retrieved");
+    $ret_fetched = fetchNdelete_files_in_list( $rf );
+
+} elsif ( @$rf == 0 ) {
+    my $msg = "No New file available at SPS to process.\n";
+    zprint($msg);
+}
+
+zprint("upload to RMS data server from local machine staging directory,");
+zprint("no matter when the file fetched backup local files");
+
+if ( !$only_download ) {
+
+    my $staging_files = get_local_file_list();
+
+    my $file_loaded = put_files_to_rms_serverNbackup2($staging_files) || [];
+    my $u_sz = 0;
+    $u_sz = @{$file_loaded};
+    
+    zprint("Total files uploaded to RMS:$u_sz");
+    my $msg = '';
+    my $content;
+
+    if ( ($file_loaded) && ( @$file_loaded > 0 ) ) {
+         normalize_stg_files($staging_files);
+         bakup_local_files($staging_files);
+
+        my $c_time = strftime( '%Y/%m/%d %H:%M', localtime );
+        $content .= $msg  . "\nEDI-856 Files Transferred to RMS ($c_time) \n=============================================\n";
+
+        for ( my $i = 0 ; $i < @$file_loaded ; $i++ ) {
+            if ( ( $i + 1 ) % 2 == 1 ) {
+                $content .= $file_loaded->[$i] . "\t";
+            }    else {
+                $content .= $file_loaded->[$i] . "\n";
+            }
+        }
+
+        $content .= "\nTotal files uploaded to RMS:$u_sz\n=============================================\n";
+        ## email poc from the list of file_loaded
+        send_notify_email('EDI 856 File Transfer Result', $content );
+
+    }
+    else {    ## if nothing loaded to RMS...
+        if ( ($ret_fetched) && ( @$ret_fetched > 0 ) ) {
+            $msg = "Troubles to upload files to RMS from local server.\n";
+            zprint($msg);
+            $content .= $msg;
+            send_notify_email('EDI 856 File Transfer Error', $content );
+        }
+    }
+}
+
+
+sub remove_files_in_dir {
+    my $dir = shift;
+    my $dh;
+    zprint("Clean up dir $dir");
+    opendir( $dh, $dir );
+    my @files = readdir($dh);
+    my $count = 0;
+    foreach my $f (@files) {
+        unlink($f);
+        $count++;
+    }
+    zprint("$count files removed");
+    return;
+}
+#-------------------------------------------------------------------
+sub get_local_file_list {
+    my @files = ();
+    my $dirfh;
+    zprint("Get local file list in dir " . $edi->{'FTP_STAGING_DIR'});
+    opendir( $dirfh, $edi->{'FTP_STAGING_DIR'} );
+    @files = readdir($dirfh);
+    @files = grep {/^SH(.*)\.7R3$/} @files;
+    unless (@files) {
+        my $msg = "no files in $edi->{'FTP_STAGING_DIR'}";
+        zprint($msg);
+    }
+    closedir($dirfh);
+    my $count = $#files; 
+    $count++ if ($count);
+    zprint("Count $count");
+    return \@files;
+}
+#-------------------------------------------------------------------
+sub get_remote_file_list {
+    my $host = $secret->{'host'};
+    my %arglist;
+    $arglist{user}     = $secret->{user} ;
+	$arglist{password} = $secret->{password}  ;
+	$arglist{port}     = $secret->{port} ;
+
+    zprint("Getting file listing SPS - Sftp to $host dir " . $edi->{REMOTE_DIR});
+    my $sftp = Net::SFTP::Foreign->new( $host, %arglist );
+    $sftp->die_on_error("Unable to establish SFTP connection to $host\n");
+    my $o_ref = $sftp->ls( $edi->{REMOTE_DIR} );
+    my @list = map { $_->{filename} } @{$o_ref};
+    my @files = grep {/^SH(.*)\.7R3/} @list;
+    my $count = $#files;
+    if ($count >= 1) {$count++;}
+    zprint("File count is  $count ");
+
+    return \@files;
+}
+#-------------------------------------------------------------------
+sub fetchNdelete_files_in_list {
+
+    my $new_file_list  = shift;
+    my @downloaded_file_list;
+
+    my $host = $secret->{'host'};
+    my %arglist;
+    $arglist{user}     = $secret->{user} ;
+	$arglist{password} = $secret->{password}  ;
+	$arglist{port}     = $secret->{port} ;
+
+    zprint("Sftp to $host");
+    my $sftp =Net::SFTP::Foreign->new( $host, %arglist );
+    $sftp->die_on_error("Unable to establish SFTP connection to $host\n");
+
+    if (@$new_file_list) {
+        zprint("Downloading Files from $host directory " . $edi->{REMOTE_DIR});
+
+        foreach my $fn (@{$new_file_list}) {
+            my $rmt_fn = $edi->{REMOTE_DIR} . '/' . $fn;
+            $sftp->get($rmt_fn) or croak("Get file $rmt_fn transfer failed: " . $sftp->error);
+            push(@downloaded_file_list, $rmt_fn);
+
+            #$sftp->remove($rmt_fn) or croak("Could not remove $rmt_fn because: " . $sftp->error);
+            zprint("FIXME ... not removing " . $rmt_fn);
+        }
+    }
+
+    return \@downloaded_file_list;
+}
+#-------------------------------------------------------------------
+# 856 function,
+# from local 856, upload to fms 3 files. two are the original, 
+# one is a blank with a special name by 'touch' command
+#-------------------------------------------------------------------
+sub put_files_to_rms_serverNbackup2 {
+    print "Begining sub put_files_to_rms_serverNbackup2\n";
+    my $file_list = shift();
+    my @files = ();
+
+
+    zprint("Put files for Jesta and backup");
+    foreach my $lf (@$file_list) {
+        #zprint("   $lf");
+        #my $local_file  = $edi->{FTP_STAGING_DIR} . '/' . $lf;
+        #my $local_touch = $edi->{FTP_STAGING_DIR} . '/' . $lf . ".TRG";
+        my $local_file  =  $lf;
+        my $local_touch =  $lf . ".TRG";
+
+        my $full_path         = $edi->{FTP_STAGING_DIR} . '/' . $lf;
+        my $full_path_touch   = $edi->{FTP_STAGING_DIR} . '/' . $lf;
+        unless ( $full_path =~ /\.TRG$/g ) {
+            my $touch_cmd = "touch $full_path_touch";
+            system($touch_cmd);
+            my $chmd = "chmod 775 $full_path_touch";
+            system($chmd);
+        }
+
+        push( @files, $local_file );
+        push( @files, $local_touch );
+    }
+
+    my $rms_staging_dir = $edi->{RMS_STAGING_DIR};
+    mkpath($rms_staging_dir);
+    zprint("Copy the files to dir $rms_staging_dir where Jesta will pick it up");
+    my @full_files;
+
+    foreach my $f (sort @files) {
+        my $orig_name = $f;
+        my $rename    = $f;
+        $rename =~ s/SH/EDI856_/;
+
+        my $from_path = $edi->{FTP_STAGING_DIR} . '/' . $orig_name;
+        
+        if ($from_path !~ /\.TRG$/i){
+            $rename =~ s/\.7R3$/\.TXT/;
+            my $to_path   = $rms_staging_dir . '/'. $rename;
+            zprint("   $from_path to $to_path");
+            copy($from_path, $to_path) or croak("Could not copy $from_path to $to_path coz $!");
+        
+        }
+        push(@full_files, $from_path);
+        #
+    }
+    print Dumper(\@full_files);
+    return \@full_files; # EDI856_*.TXT, EDI856_*.TRG modified files
+}
+#-------------------------------------------------------------------
+sub bakup_local_files {
+    my $file_list = shift();
+    my @files;
+    my $errors;
+    zprint("Copy files to local backup dir " . $edi->{FTP_STAGING_DIR_BKUP});
+    foreach my $lf (@$file_list) {
+        my $local_file  = $edi->{FTP_STAGING_DIR} . '/' . $lf;
+        my $local_touch = $edi->{FTP_STAGING_DIR} . '/' . $lf . ".TRG";
+        if ( ( -e $local_file ) && ( -e $local_touch ) ) {
+            my $bk_local_file = $edi->{FTP_STAGING_DIR_BKUP} . '/' . $lf;
+            move($local_file, $bk_local_file) or croak("Could not move $local_file to $bk_local_file : $!\n");
+            unlink($local_touch) or croak("Could not remove $local_touch because $!\n");
+        }
+    }
+    return $errors;
+}
+#-------------------------------------------------------------------
+# LDL 20151104
+sub normalize_stg_files {
+    my ($file_list) = @_;
+    my @files;
+    my $errors;
+    zprint("Copy files to Normalized dir " . $edi->{FTP_NORMALIZE_DIR});
+    foreach my $lf (@$file_list) {
+        my $local_file  = $edi->{FTP_STAGING_DIR} . '/' . $lf;
+        my $local_touch = $edi->{FTP_STAGING_DIR} . '/' . $lf . ".TRG";
+        if ( ( -e $local_file ) && ( -e $local_touch ) ) {
+            my $cp_dir = $edi->{FTP_NORMALIZE_DIR} . '/' ;
+            #zprint("  $local_file");
+            #Szprint("  $local_touch");
+            copy($local_file, $cp_dir) or croak("Could not copy $local_file to $cp_dir");
+            copy($local_touch, $cp_dir) or croak("Could not copy $local_touch to $cp_dir");
+        }
+    }
+    return $errors;
+}
+# LDL END
+#-------------------------------------------------------------------
+sub email_to_ccstr_pip_dlmt {
+    my ( $cc_str, $subject, $body ) = @_;
+    my @cc_list = split( /\|/, $cc_str );
+    foreach my $to_str (@cc_list) {
+        if ($to_str) {
+            my $hdrstr = '';
+            $hdrstr .= "To: $to_str\n";
+            $hdrstr .= "From: rdistaff\@usmc-mccs.org\n";
+            $hdrstr .= "Subject: $subject\n";
+            my $hostname = "MCE-container-image";
+            $body .= "\n\temail from host: $hostname\n";
+
+	    ##my $total_buffer = '';
+	    ##$total_buffer = $total_buffer.$hdrstr ."\n";
+	    ##$total_buffer = $total_buffer.$body ."\n";
+	    
+            ##open MAIL, "|/usr/sbin/sendmail -t"
+            ##  or die "Can not open sendmail\n";
+            ##print MAIL $hdrstr . "\n";
+            ##print MAIL $body . "\n";
+            ##close MAIL;
+
+	    open my $fh2, '>:encoding(UTF-8)', "|/usr/sbin/sendmail -t" or die "Can not open sendmail\n";
+	    print $fh2 $hdrstr . "\n";
+	    print $fh2 $body . "\n";
+	    close $fh2;
+
+            zprint("email to: $to_str\n");
+        }
+    }
+    return 1;
+}
+sub send_notify_email { 
+   my $subject = shift;
+   eval {
+      my $mailer_simple = MCCS::SES::Sendmail->new(
+         aws_region => 'us-gov-west-1', #TODO likely replacec with config file value.
+         from_email => $edi->{MAIL_FROM}
+      );
+      my $all_emails = {'EDI_TO_MAIL' => $edi->{MAIL_TO} };
+      $mailer_simple->sendTo($all_emails);
+      $mailer_simple->subject($subject);
+      # This demonstrates passing a hash to msg() instead of an array ref.
+      $mailer_simple->msg(@_);
+      $mailer_simple->message_type('TEXT');
+      $mailer_simple->verboseLevel(0); # 0 means send
+
+      # Use send_mail() because there are no attachments.
+      if ($mailer_simple->send_mail()) {
+         zprint "Edi_856 Email Succeeded!\n";
+      } else {
+         zprint "Edi_856 Failed to send simple email (as per return code).\n";
+      }
+   };
+   if ($@) {
+      my $error = $@;
+      eval { $error = decode('UTF-8', $error, Encode::FB_WARN) };
+      print "EDI_856 DIED while trying to send simple email: $error\n";
+   }
+} # end send_notify_email
+#-------------------------------------------------------------------
+
+=pod
+
+=head1 NAME
+
+edi_856_upload.pl
+
+=head1 DESCRIPTION
+
+This program will check the sps data server, list new edi 856 files.
+fetch the new files, and delete files after successful fetching them from the sps data server. 
+The program will then transfer the files to RMS databaser server. From where, the data will be picked up and load into the database by another process.
+
+Log messages goes to /usr/local/mccs/log/ftp/edi_856/ with a time stamp on file name. 
+
+=head1 CONFIGURATION
+
+=over 
+
+/usr/local/mccs/etc/edi_856/
+ 
+=back
+
+=head1 AUTHOR
+
+Chunhui Yu<yuc@usmc-mccs.org|chunhui_at_tigr@yahoo.com>
+
+=cut
